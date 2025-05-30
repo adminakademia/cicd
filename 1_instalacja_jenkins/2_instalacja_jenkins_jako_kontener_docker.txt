@@ -1,0 +1,64 @@
+
+### Instalacja Docker w Debian:
+https://docs.docker.com/engine/install/debian/
+
+# Doninstalowujemy także:
+apt install docker-compose -y
+
+
+### Uruchomienie Portainer:
+
+
+mkdir -p /docker/portainer
+
+docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer:/data portainer/portainer-ce:lts
+
+
+
+#### Wygenerowanie Certyfikatu samopodpisanego SSl
+
+openssl req -new -days 36500 -nodes -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -subj "/C=PL/ST=SLASK/L=Gliwice/O=Contoso/OU=IT/CN=*.karcewicz.pl/emailAddress=kontakt@adminakademia.pl" -keyout karcewiczwild.key -out karcewiczwild.pem -addext "subjectAltName=DNS:karcewicz.pl,DNS:*.karcewicz.pl"
+
+
+
+### Uruchomienie NPM w Portainer, plik docker-compose:
+
+
+version: '3'
+services:
+  app: 
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nginx-proxy-manager
+    restart: always
+    ports:
+      - '80:80' #HTTP Traffic
+      - '443:443' #HTTPS Traffic
+      - '81:81' #Dashboard Port
+    volumes:
+      - '/docker/npm/data:/data'
+      - '/docker/npm/letsencrypt:/etc/letsencrypt'
+	  
+	  
+
+
+## Uruchomienie Jenkins Docker w Portainer, plik docker-compose:
+
+
+  services:
+    jenkins:
+      image: jenkins/jenkins:lts
+	  privileged: true
+      user: root
+      ports:
+       - 8080:8080
+       - 50000:50000
+      container_name: jenkins
+      volumes:
+      - /docker/jenkins:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+	  restart: always
+	  
+	  
+
+docker logs jenkins | less
+
