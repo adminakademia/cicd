@@ -1,0 +1,14 @@
+### Instalacja jenkins w Debian:
+
+https://pkg.origin.jenkins.io/debian-stable/
+
+
+# Jak by zmienić port na inny, to:
+systemctl edit jenkins 
+
+[Service]
+Environment="JENKINS_PORT=8081"
+
+
+# Hasło odczytujemy:
+cat /var/lib/jenkins/secrets/initialAdminPassword
