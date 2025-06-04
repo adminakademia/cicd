@@ -1,0 +1,8 @@
+services:
+  dns:
+    build: .
+    container_name: dns-server
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    restart: unless-stopped
