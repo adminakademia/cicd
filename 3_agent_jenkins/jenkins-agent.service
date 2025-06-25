@@ -1,0 +1,11 @@
+[Unit]
+Description=Jenkins Agent Service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/jenkins-service/start-agent.sh
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
