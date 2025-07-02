@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Ponizej wpisz nazwe swojego konta dockerhub:
+konto_docker_hub="adminakademiagit"
+docker_haslo="twoje_haslo"
+
+
+# Budowanie obrazu Docker
+echo "Budowanie obrazu Docker: moj-server-dns"
+docker build -t moj-server-dns .
+
+# Wysyłanie obrazu do Docker Hub
+echo "Logowanie do Docker Hub..."
+echo "$docker_haslo" | docker login --username "$konto_docker_hub" --password-stdin || { echo "Logowanie nie powiodło się"; exit 1; }
+
+echo "Tagowanie obrazu..."
+docker tag moj-server-dns:latest $konto_docker_hub/moj-server-dns:latest
+
+echo "Wysyłanie obrazu do Docker Hub..."
+docker push $konto_docker_hub/moj-server-dns:latest
+
+echo "Zakończono."
