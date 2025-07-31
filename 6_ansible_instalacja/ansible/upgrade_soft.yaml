@@ -1,0 +1,12 @@
+---
+- name: Aktualizacja oprogramowania.
+  hosts: docker.adminakademia.lan
+  become: yes
+  tasks:
+    - name: Aktualizacja listy pakietów (apt update)
+      apt:
+        update_cache: yes
+
+    - name: Uaktualnij wszystkie pakiety (apt upgrade)
+      apt:
+        upgrade: dist
