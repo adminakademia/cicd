@@ -1,5 +1,6 @@
 ---
 - name: Instalacja Docker, i strony na Nginx
+  hosts: docker.adminakademia.lan
   become: yes
 
   vars:
