@@ -1,0 +1,17 @@
+#!/bin/bash
+echo "Ustawienie pliku inventory"
+cat << EOF > ./inventory/serwery.yaml
+all:
+  children:
+    servers:
+      children:
+        serweryweb:
+          hosts:
+            docker.adminakademia.lan:
+              ansible_host: ${IP_HOSTA}
+              ansible_connection: ssh
+              ansible_ssh_user: user
+EOF
+echo " "
+echo "Uruchamianie wdrożenia strony www"
+ansible-playbook instalacja_dockernginx_strona.yaml
