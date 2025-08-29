@@ -1,0 +1,46 @@
+pipeline {
+agent {
+  label 'linux-docker'
+}
+
+parameters {
+  string defaultValue: '0.0.0.0', description: 'Podaj adres IP hosta na który zrealizować wdrożenie strony www', name: 'IP_HOSTA', trim: true
+}
+
+    stages {
+        stage('Pobieranie GIT') {
+            steps {
+               checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/adminakademiagit/ansible_www.git']])
+            }
+        }
+        
+                stage('Budowa pliku inwentarza dla Ansible') {
+            steps {
+                sh '''#!/bin/bash
+echo "Ustawienie pliku inventory"
+cat << EOF > ./inventory/serwery.yaml
+all:
+  children:
+    servers:
+      children:
+        serweryweb:
+          hosts:
+            docker.adminakademia.lan:
+              ansible_host: ${IP_HOSTA}
+              ansible_connection: ssh
+              ansible_ssh_user: user
+EOF
+echo " "
+echo "Uruchamianie wdrożenia strony www"
+'''               
+            }
+        }
+        
+                stage('Uruchomienie scenariusza Ansible') {
+            steps {
+              ansiblePlaybook inventory: './inventory/serwery.yaml', playbook: 'instalacja_dockernginx_strona.yaml', vaultTmpPath: ''
+            }
+        }
+        
+    }
+}
