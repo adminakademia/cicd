@@ -1,0 +1,94 @@
+// Jenkinsfile (Scripted Pipeline)
+properties([
+  parameters([
+    string(
+      name: 'IP_HOSTA',
+      defaultValue: '0.0.0.0',
+      description: 'Podaj adres IP hosta na który zrealizować wdrożenie strony www',
+      trim: true
+    )
+  ])
+])
+
+def isValidIPv4(String ip) {
+  if (!ip) return false
+  if (ip == '0.0.0.0') return false
+  def m = ip =~ /^(?:(?:25[0-5]|2[0-4]\d|1?\d{1,2})\.){3}(?:25[0-5]|2[0-4]\d|1?\d{1,2})$/
+  return m.matches()
+}
+
+node('linux-docker') {
+  stage('Walidacja parametru IP') {
+    def ip = params.IP_HOSTA?.trim()
+    if (!isValidIPv4(ip)) {
+      error "Nieprawidłowy adres IP w parametrze IP_HOSTA: '${ip}'. Podaj poprawny adres IPv4 (np. 192.168.1.10) – '0.0.0.0' jest niedozwolone."
+    }
+    echo "Parametr IP_HOSTA OK: ${ip}"
+  }
+
+  stage('Pobieranie GIT') {
+    git branch: 'main', url: 'https://github.com/adminakademiagit/ansible_www.git'
+  }
+
+  stage('Budowa pliku inwentarza dla Ansible') {
+    def ip = params.IP_HOSTA.trim()
+    sh 'mkdir -p inventory'
+    writeFile file: 'inventory/serwery.yaml', text: """\
+all:
+  children:
+    servers:
+      children:
+        serweryweb:
+          hosts:
+            docker.adminakademia.lan:
+              ansible_host: ${ip}
+              ansible_connection: ssh
+              ansible_ssh_user: user
+"""
+    echo "Utworzono inventory/serwery.yaml dla ${ip}"
+  }
+
+  stage('Uruchomienie scenariusza Ansible') {
+    if (!fileExists('inventory/serwery.yaml')) {
+      error "Plik inventory/serwery.yaml nie istnieje – zatrzymuję pipeline."
+    }
+    def fileContent = readFile('inventory/serwery.yaml').trim()
+    if (fileContent.isEmpty()) {
+      error "Plik inventory/serwery.yaml jest pusty – zatrzymuję pipeline."
+    }
+
+    echo "Plik inventory/serwery.yaml istnieje i ma zawartość. Uruchamiam Ansible..."
+
+    ansiblePlaybook(
+      inventory: './inventory/serwery.yaml',
+      playbook: 'instalacja_dockernginx_strona.yaml',
+      vaultTmpPath: ''
+    )
+  }
+
+  stage('Test dostępności aplikacji') {
+    def ip = params.IP_HOSTA.trim()
+    def urls = ["http://${ip}/", "http://${ip}/health"]
+
+    for (u in urls) {
+      stage("Sprawdzam: ${u}") {
+        // Do 5 prób, z krótką pauzą między nimi
+        retry(5) {
+          sh """
+            set -e
+            code=\$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 3 --max-time 5 "${u}")
+            echo "HTTP ${u} => \$code"
+            # Akceptujemy 2xx i 3xx
+            if [ "\$code" -lt 200 ] || [ "\$code" -ge 400 ]; then
+              echo "Niepoprawny kod odpowiedzi: \$code"
+              exit 1
+            fi
+          """
+          sleep time: 3, unit: 'SECONDS'
+        }
+      }
+    }
+
+    echo "Aplikacja odpowiada poprawnie pod: ${urls.join(', ')}"
+  }
+}
