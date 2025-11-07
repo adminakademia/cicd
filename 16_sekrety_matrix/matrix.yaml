@@ -1,0 +1,39 @@
+name: Test wykorzystania matrix  # Nazwa przepływu
+
+on:
+  push:
+    branches:
+      - main  # Przepływ uruchamiany przy dodaniu punktu kontrolnego na gałąź "main"
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}  # Uruchom zadanie na systemie zdefiniowanym w macierzy matrix
+    strategy:
+        fail-fast: false                # Powoduje, że wszystkie zadania/joby z matrix wykonają się do końca, nawet jeśli inne zakończą się niepowodzeniem
+        max-parallel: 3                 # Ogranicz maksymalną liczbę równocześnie wykonywanych zadań/jobów w matrix na 3
+        matrix:
+            os: [ubuntu-latest, windows-latest, macos-latest]  # Lista systemów operacyjnych do testowania
+            python-version: [3.14, 3.9, 3.1]  # Lista wersji Pythona do testowania
+            include:
+            - os: ubuntu-latest         # Dodaj do matrix dodatkową kombinację, która nie wynika bezpośrednio z zdefiniowanych list
+              python-version: 3.8
+            exclude:
+            - os: windows-latest        # Wyklucz podaną wczesniej w liście kombinację Windows z Pythonem 3.8
+              python-version: 3.9
+
+    steps:
+      - uses: actions/checkout@v3  # Pobranie zawartości repozytorium git
+
+      - name: Ustawienie wersji Python ${{ matrix.python-version }}  # Ustawienie wersji Pythona dla bieżącej kombinacji matrixa
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}  # Wersja Pythona określona w matrixie
+
+      - name: Pokaż informacje o środowisku  # Wyświetlenie wersji Pythona i informacji o systemie
+        run: |
+          python --version  # Pokazuje zainstalowaną wersję Pythona
+          uname -a || systeminfo  # Pokazuje szczegóły systemu na Linux/Mac lub Windows
+
+      - name: Uruchomienie testów  # Przykładowe uruchomienie testów - tu tylko echo z informacją
+        run: echo "Uruchamiam testy na Pythonie ${{ matrix.python-version }} na systemie ${{ matrix.os }}"
+
