@@ -1,0 +1,83 @@
+name: Utworzenie i wysłanie obrazu Docker (moj-server-dns)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  utworzenie-oraz-wyslanie_obrazu:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout z repozytorium GitHub
+        uses: actions/checkout@v4
+
+      - name: Konfiguracja Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Logowanie do Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.Login_Docker_Hub }}
+          password: ${{ secrets.Haslo_Docker_Hub }}
+
+      - name: Inteligentny generator tagów i etykiet Dockera
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.Login_Docker_Hub }}/moj-server-dns
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag
+            type=sha,format=short
+
+# Powyższa akcja: 
+# 1) tworzy tag 'latest', ale tylko wtedy, gdy przepływ został uruchomiony 
+# z domyślnej gałęzi repozytorium
+# 2) tworzy tag na podstawie wypchniętego taga Git (w sumie to my go nie używamy, 
+# więc tu u nas nic to nie robi :-))
+# 3) tworzy tag z krótkiego skrótu SHA aktualnego punktu kontrolnego (7 pierwszych znaków).
+
+      - name: Utworzenie i wysłanie obrazu na Docker Hub
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+
+  deploy-and-test:
+    # Poniższe spowoduje, że zadanie uruchomi się tylko, gdy to wcześniejsze zakończy się sukcesem
+    needs: [utworzenie-oraz-wyslanie_obrazu]
+    runs-on: dns_server
+    env:
+        IMAGE_NS: ${{ secrets.Login_Docker_Hub }}
+        IMAGE_NAME: ${{ secrets.Login_Docker_Hub }}/moj-server-dns:latest
+        # Jeśli docker-compose.yml jest w jakimś konkretnym katalogu na serwerze, ustaw go tutaj:
+        COMPOSE_DIR: ${{ github.workspace }}  # zmień np. na ./dockercompose jeśli tam jest plik docker-compose.yml
+
+    steps:
+    - name: Checkout z repozytorium GitHub
+      uses: actions/checkout@v4
+
+    - name: Logowanie do Docker Hub (na agencie self-hosted)
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.Login_Docker_Hub }}
+        password: ${{ secrets.Haslo_Docker_Hub }}
+
+    - name: Pobranie i ponowne utworzenie kontenera z docker-compose
+      working-directory: ${{ env.COMPOSE_DIR }}
+      run: |
+        docker-compose pull
+        docker-compose down
+        docker-compose up --force-recreate -d
+
+    - name: Test 1 — named-checkconf
+      run: |
+        docker run --rm --pull always $IMAGE_NAME /bin/bash -c "named-checkconf /etc/bind/named.conf"
+
+    - name: Test 2 — named-checkzone
+      run: |
+        docker run --rm --pull always $IMAGE_NAME /bin/bash -c "named-checkzone adminakademia.lan /etc/bind/db.adminakademia.lan"
