@@ -20,7 +20,49 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+
+# Dodajemy zadanie weryfikujące najpierw poprawność playbook'a ansible:
+
+  # =========================
+  #     ZADANIE: LINT
+  # =========================
+  lint:
+    name: Ansible Lint
+    runs-on: moj_ansible
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Sprawdzenie czy zainstalowane ansible-lint
+        id: check_lint
+        run: |
+          if command -v ansible-lint >/dev/null 2>&1; then
+            echo "ansible-lint już jest zainstalowany."
+            echo "installed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ansible-lint nie jest zainstalowany."
+            echo "installed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Instalacja ansible-lint
+        if: steps.check_lint.outputs.installed == 'false'
+        run: |
+          echo "Instalowanie ansible-lint..."
+          sudo apt update
+          sudo apt install -y ansible-lint
+
+      - name: Uruchomienie ansible-lint
+        run: |
+          echo "Linting playbooków..."
+          ansible-lint instalacja_dockernginx_strona.yaml
+
+  # =========================
+  #     ZADANIE: DEPLOY
+  # =========================
+  
   deploy:
+    # dodajemy weryfikację, aby to zadanie zostało wykonane tylko wtedy, gdy poprzednie zakończy się sukcesem:
+    needs: lint 
     runs-on: moj_ansible
     # POniżej zabezpieczenie przed wiszącym deployem (np. zawieszony SSH). 
     # Po 30 minutach zadanie padnie – lepsze to niż nieskończone „running”.
