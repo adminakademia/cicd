@@ -1,0 +1,119 @@
+name: Wdrożenie strony www v2
+
+on:
+  workflow_dispatch:
+    inputs:
+      IP_HOSTA:
+        description: 'Podaj adres IP hosta na który zrealizować wdrożenie strony www'
+        required: true
+        default: '0.0.0.0'
+      # Wskazanie konta użytkownika na bazie którego ma być realizowane połączenie SSH z hostem w ramach ansible:
+      SSH_USER:
+        description: 'Użytkownik SSH do połączenia z hostem (domyślnie: user)'
+        required: false
+        default: 'user'
+
+concurrency:
+  # zapobiega kilku równoległym wdrożeniom na ten sam adres IP
+  # Żeby dwa kliknięcia „Run workflow” z tym samym IP_HOSTA nie odpaliły czasem dwóch równoległych deployów na ten sam host.
+  group: deploy-www-${{ github.event.inputs.IP_HOSTA }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: moj_ansible
+    # POniżej zabezpieczenie przed wiszącym deployem (np. zawieszony SSH). 
+    # Po 30 minutach zadanie padnie – lepsze to niż nieskończone „running”.
+    timeout-minutes: 30
+    environment: production
+
+    env:
+      IP_HOSTA: ${{ github.event.inputs.IP_HOSTA }}
+      SSH_USER: ${{ github.event.inputs.SSH_USER }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Walidacja adresu IP
+        run: |
+          echo "Sprawdzam IP_HOSTA=${IP_HOSTA}"
+
+          # 1) IP nie może być puste
+          if [ -z "${IP_HOSTA}" ]; then
+            echo "BŁĄD: IP_HOSTA jest puste."
+            exit 1
+          fi
+
+          # 2) IP nie może być 0.0.0.0
+          if [ "${IP_HOSTA}" = "0.0.0.0" ]; then
+            echo "BŁĄD: IP_HOSTA nie może być 0.0.0.0."
+            exit 1
+          fi
+
+          # 3) Walidacja formatu IPv4
+          IP_REGEX='^([0-9]{1,3}\.){3}[0-9]{1,3}$'
+          if ! [[ "${IP_HOSTA}" =~ ${IP_REGEX} ]]; then
+            echo "BŁĄD: IP_HOSTA nie jest poprawnym adresem IPv4 (zły format)."
+            exit 1
+          fi
+
+          # 4) Sprawdzenie zakresu 0–255 dla oktetów
+          IFS='.' read -r o1 o2 o3 o4 <<< "${IP_HOSTA}"
+          for o in "$o1" "$o2" "$o3" "$o4"; do
+            if [ "$o" -lt 0 ] || [ "$o" -gt 255 ]; then
+              echo "BŁĄD: IP_HOSTA zawiera oktet spoza zakresu 0–255: ${o}"
+              exit 1
+            fi
+          done
+
+          echo "Adres IP_HOSTA jest poprawny."
+
+      # Dodajemy zadanie weryfikujące, czy Ansible jest zainstalowany już:
+      - name: Sprawdzenie, czy Ansible jest dostępny na runnerze
+        run: |
+          if ! command -v ansible >/dev/null 2>&1; then
+            echo "BŁĄD: Ansible nie jest zainstalowany na runnerze."
+            echo "Zainstaluj Ansible na maszynie 'moj_ansible' (np. 'sudo apt install ansible') i uruchom workflow ponownie."
+            exit 1
+          fi
+
+          if ! command -v ansible-playbook >/dev/null 2>&1; then
+            echo "BŁĄD: ansible-playbook nie jest dostępny, sprawdź instalację Ansible."
+            exit 1
+          fi
+
+          echo "Ansible jest dostępny:"
+          ansible --version
+
+# Poniżej dodano "ansible_python_interpreter", aby uciszyć to ostrzeżenie Ansible o „discovered Python interpreter”:
+      - name: Budowa pliku inwentarza dla Ansible
+        run: |
+          echo "Ustawienie pliku inventory"
+          mkdir -p ./inventory
+          cat << EOF > ./inventory/serwery.yaml
+          all:
+            children:
+              servers:
+                children:
+                  serweryweb:
+                    hosts:
+                      docker.adminakademia.lan:
+                        ansible_host: ${IP_HOSTA}
+                        ansible_connection: ssh
+                        ansible_ssh_user: ${SSH_USER}
+                        ansible_python_interpreter: /usr/bin/python3.13
+          EOF
+          echo "Plik inventory/serwery.yaml:"
+          cat ./inventory/serwery.yaml
+
+      # Zamiast od razu uruchamiać pełny playbook, robimy szybkie sprawdzenie czy ansible działa:
+      - name: Ansible ping test do hosta
+        run: |
+          echo "Sprawdzam, czy host jest osiągalny przez Ansible (moduł ping)..."
+          ansible all -i ./inventory/serwery.yaml -m ping
+
+      - name: Uruchomienie scenariusza Ansible
+        run: |
+          echo "Start ansible-playbook..."
+          ansible-playbook -i ./inventory/serwery.yaml instalacja_dockernginx_strona.yaml
