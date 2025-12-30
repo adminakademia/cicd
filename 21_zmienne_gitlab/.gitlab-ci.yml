@@ -1,0 +1,39 @@
+spec:
+  inputs:
+    wybor_klienta:
+      description: "Nasz Klient"
+      options: ["Contoso", "Arcacorp", "Nwtraders"]
+      default: "Contoso"
+    nazwa_operatora:
+      description: "Twoje imię i nazwisko"
+      default: ""
+
+---
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - when: never
+
+testujemy-input:
+  image: ubuntu:24.04
+  stage: build
+  variables:
+    Klient: $[[ inputs.wybor_klienta ]]
+    Operator: $[[ inputs.nazwa_operatora ]]
+  script: |
+    echo "Wybrany klient to: $Klient"
+    echo "Wskazany operator to: $Operator"
+    JADRO=$(uname -a)
+    echo "Jadro w systemie to $JADRO"
+    echo "Wersja jadra $JADRO"
+    echo "JADRO=$JADRO" > build.env
+  artifacts:
+    reports:
+      dotenv: build.env
+
+wyswietl-zmienna:
+  image: ubuntu:24.04
+  stage: test
+  script:
+    - echo "Jadro w systemie to $JADRO"
