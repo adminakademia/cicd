@@ -1,0 +1,55 @@
+stages:
+  - .pre
+  - build
+  - test
+  - deploy
+  - .post
+
+zadanie1:
+  image: ubuntu:24.04
+  stage: .pre
+  script:
+    - echo "Testowanie GitLab CI/CD"
+    - ls -la
+    - mkdir mojezadania
+    - cd mojezadania
+    - echo "Testujemy GitLab CI/CD" > mojplik.txt
+    - cat mojplik.txt
+  artifacts:
+    paths:
+      - mojezadania/
+
+zadanie2:
+  image: ubuntu:24.04
+  stage: build
+  script:
+    - test -f mojezadania/mojplik.txt
+    - grep "GitLab" mojezadania/mojplik.txt	
+
+zadanie3:
+  image: ubuntu:24.04
+  stage: test
+  script:
+    - test -f mojezadania/mojplik.txt
+    - echo "Zadanie 3"
+
+zadanie4:
+  image: ubuntu:24.04
+  stage: .post
+  script:
+    - test -f mojezadania/mojplik.txt
+    - echo "Zadanie 4"
+
+zadanie5:
+  image: ubuntu:24.04
+  stage: deploy
+  script:
+    - test -f mojezadania/mojplik.txt
+    - echo "Zadanie 5"
+
+zadanie6:
+  image: ubuntu:24.04
+  stage: deploy
+  script:
+    - test -f mojezadania/mojplik.txt
+    - echo "Zadanie 6"
