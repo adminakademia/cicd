@@ -1,0 +1,119 @@
+spec:
+  inputs:
+    wybor_klienta:
+      description: "Nasz Klient"
+      options: ["Contoso", "Arcacorp", "Nwtraders"]
+      default: "Contoso"
+    nazwa_operatora:
+      description: "Twoje imię i nazwisko"
+      default: ""
+
+---
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - when: never
+
+testujemy-input:
+  image: ubuntu:24.04
+  stage: build
+  variables:
+    Klient: $[[ inputs.wybor_klienta ]]
+    Operator: $[[ inputs.nazwa_operatora ]]
+  script: |
+    echo "Wybrany klient to: $Klient"
+    echo "Wskazany operator to: $Operator"
+    JADRO=$(uname -r)
+    echo "Jadro w systemie to $JADRO"
+    echo "Wersja jadra $JADRO"
+    echo "JADRO=$JADRO" > build.env
+  artifacts:
+    reports:
+      dotenv: build.env
+
+sprawdz_jadro_6x:
+  stage: test
+  image: ubuntu:24.04
+  needs:
+    - testujemy-input
+  script:
+    - echo "Wykryto jądro 6.x - warunek został spełniony, i zadanie zostało wykonane!"
+  rules:
+    - if: '$JADRO =~ /^6\./'
+
+sprawdz_jadro_inne:
+  stage: test
+  image: ubuntu:24.04
+  needs:
+    - testujemy-input
+  script:
+    - echo "Wykryto jądro inne niż 6.x — to zadanie zostało wykonane zamiast poprzedniego."
+  rules:
+    - if: '$JADRO !~ /^6\./'
+
+
+testy_warunku:
+  stage: test
+  image: ubuntu:24.04
+  script:
+    - echo "Pierwsze zadanie"
+    - exit 1  # lub exit 1 aby symulować błąd
+
+drugie_zadanie_zawsze:
+  stage: deploy
+  image: ubuntu:24.04
+  needs:
+    - testy_warunku
+  script:
+    - echo "Drugie zadanie wykonane"
+  when: always
+
+drugie_zadanie_po_awarii:
+  stage: deploy
+  image: ubuntu:24.04
+  needs:
+    - testy_warunku
+  script:
+    - echo "Drugie zadanie wykonane po awarii"
+  when: on_failure
+
+
+uruchom_po_sukcesie:
+  stage: deploy
+  image: ubuntu:24.04
+  needs:
+    - testy_warunku
+  script:
+    - echo "Po sukcesie"
+  when: on_success
+
+
+testowanie_sekretu:
+  stage: deploy
+  image: ubuntu:24.04
+  environment:
+    name: Produkcyjne
+  script:
+    - echo "Sekret repozytorium to $Testowy_sekret_repo"
+    - echo "Sekret repozytorium to $testowy_sekret_repo2"
+    - echo "Zmienna repozytorium to $Testowa_zmienna_repo"
+    - echo "Sekret środowiska to $sekret_srodowiska"
+  when: always
+
+
+odszyfrowanie_gpg:
+  stage: deploy
+  image: ubuntu:24.04
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq gnupg
+  script:
+    - mkdir -p $HOME/secrets
+    - gpg --quiet --batch --yes --decrypt --passphrase="$HASLO_GPG1" --output $HOME/secrets/sekret.json sekret.json.gpg
+    - echo "Plik został odszyfrowany"
+    - cat $HOME/secrets/sekret.json
+    - echo "$SSH_KEY"
+  when: always
+
+
