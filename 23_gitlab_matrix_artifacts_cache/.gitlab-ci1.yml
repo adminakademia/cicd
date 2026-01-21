@@ -1,0 +1,45 @@
+stages:
+  - test
+
+test:
+  stage: test
+  image: ubuntu:24.04
+  
+  parallel:
+    matrix:
+      - PYTHON_VERSION: ['3.14', '3.9', '3.1']  # Lista wersji Pythona do testowania
+  
+  # Dla systemów innych niż ubuntu, można użyć odpowiednich tagów runnerów
+  tags:
+    - saas-linux-medium-amd64 # GitLab SaaS Linux runner
+  
+  before_script:
+    - apt-get update
+    - apt-get install -y software-properties-common
+    - add-apt-repository -y ppa:deadsnakes/ppa
+    - apt-get update
+    - apt-get install -y python${PYTHON_VERSION} || echo "Wersja ${PYTHON_VERSION} niedostępna"
+
+  script:
+    - echo "=== Informacje o systemie ==="
+    - uname -a
+    - cat /etc/os-release | head -3
+    - echo ""
+    - echo "=== Weryfikacja Pythona ${PYTHON_VERSION} ==="
+    - |
+      if command -v python${PYTHON_VERSION} &> /dev/null; then
+        echo "✓ Python ${PYTHON_VERSION} jest zainstalowany:"
+        python${PYTHON_VERSION} --version
+        echo "Ścieżka: $(which python${PYTHON_VERSION})"
+        exit 0
+      else
+        echo "✗ Python ${PYTHON_VERSION} NIE jest zainstalowany!"
+        echo "Dostępne wersje Pythona w systemie:"
+        ls -la /usr/bin/python* 2>/dev/null || echo "Brak"
+        exit 1
+      fi
+  
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"  # Uruchom tylko dla gałęzi "main"
+	
+	
