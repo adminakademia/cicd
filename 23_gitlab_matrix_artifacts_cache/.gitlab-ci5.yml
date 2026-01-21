@@ -1,0 +1,115 @@
+stages:
+  - build
+  - test
+  - deploy
+
+default:
+  cache: &global_cache
+    key: "nftables-cache-$CI_PIPELINE_ID"
+    paths:
+      - nftables/
+
+zadanie1:
+  image: alpine
+  stage: build
+  cache: []
+  script:
+    - echo "Testowanie GitLab CI/CD"
+    - ls -la
+    - mkdir mojezadania
+    - cd mojezadania
+    - echo "Testujemy GitLab CI/CD" > mojplik.txt
+    - cat mojplik.txt
+  artifacts:
+    paths:
+      - mojezadania/
+
+zadanie1bis:
+  image: alpine
+  stage: build
+  cache: []
+  script:
+    - echo "Testowanie GitLab CI/CD"
+    - ls -la
+    - mkdir mojezadania
+    - cd mojezadania
+    - echo "Zadanie1bis" > mojplikbis.txt
+    - cat mojplikbis.txt
+  artifacts:
+    paths:
+      - mojezadania/
+
+zadanie1_oczekiwanie:
+  image: alpine
+  stage: build
+  cache: []
+  script:
+    - echo "Robię ważne zadania..."
+    - sleep 30
+
+
+zadanie2:
+  image: alpine
+  stage: test
+  cache: []
+  dependencies: 
+    - zadanie1
+  needs:
+    - zadanie1
+  script:
+    - ls mojezadania/
+    - test -f mojezadania/mojplik.txt
+    - grep "GitLab" mojezadania/mojplik.txt
+
+zadanie2bis:
+  image: alpine
+  stage: test
+  dependencies: 
+    - zadanie1bis
+  script:
+    - mkdir nftables
+    - cd nftables/
+    - wget https://www.netfilter.org/projects/nftables/files/nftables-1.0.6.1.tar.xz
+  cache:
+    <<: *global_cache
+    policy: push  # Nie pobiera ale zapisuje
+
+
+zadanie3:
+  image: alpine
+  stage: deploy
+  cache: []
+  needs:
+    - job: zadanie1bis
+    - job: zadanie2
+    - job: zadanie1
+      artifacts: false
+  script:
+    - ls mojezadania/
+
+zadanie3bis:
+  image: alpine
+  stage: deploy
+  needs:
+    - job: zadanie2bis
+  script:
+    - ls nftables/
+  cache:
+    <<: *global_cache
+    policy: pull  # Pobiera i nie zapisuje
+
+
+wyczyszczenie_cache:
+  image: alpine
+  stage: deploy
+  needs:
+    - job: zadanie3bis
+  when: always  # wykona się nawet jeśli poprzednie zadania zawiodą
+  cache:
+    <<: *global_cache
+    policy: pull-push
+  script:
+    - rm -rf nftables/*
+    - echo "Cache wyczyszczony"
+
+
