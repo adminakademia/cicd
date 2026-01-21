@@ -1,0 +1,55 @@
+stages:
+  - zadanie1
+  - zadanie2
+
+zadanie1:
+  image: alpine
+  stage: zadanie1
+  script:
+    - echo "Testowanie GitLab CI/CD"
+    - ls -la
+    - mkdir mojezadania
+    - cd mojezadania
+    - echo "Testujemy GitLab CI/CD" > mojplik.txt
+    - cat mojplik.txt
+  artifacts:
+    paths:
+      - mojezadania/
+
+zadanie1bis:
+  image: alpine
+  stage: zadanie1
+  script:
+    - echo "Testowanie GitLab CI/CD"
+    - ls -la
+    - mkdir mojezadania
+    - cd mojezadania
+    - echo "Zadanie1bis" > mojplikbis.txt
+    - cat mojplikbis.txt
+  artifacts:
+    paths:
+      - mojezadania/
+
+zadanie2:
+  image: alpine
+  stage: zadanie2
+  dependencies: 
+    - zadanie1
+  script:
+    - ls mojezadania/
+    - test -f mojezadania/mojplik.txt
+    - grep "GitLab" mojezadania/mojplik.txt
+    - test -f mojezadania/mojplikbis.txt
+    - grep "Zadanie1bis" mojezadania/mojplikbis.txt
+
+zadanie2bis:
+  image: alpine
+  stage: zadanie2
+  dependencies: 
+    - zadanie1bis
+  script:
+    - ls mojezadania/
+    - test -f mojezadania/mojplikbis.txt
+    - grep "Zadanie1bis" mojezadania/mojplikbis.txt
+    - test -f mojezadania/mojplik.txt
+    - grep "GitLab" mojezadania/mojplik.txt
