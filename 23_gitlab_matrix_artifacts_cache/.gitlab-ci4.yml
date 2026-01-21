@@ -1,0 +1,71 @@
+stages:
+  - build
+  - test
+  - deploy
+
+zadanie1:
+  image: alpine
+  stage: build
+  script:
+    - echo "Testowanie GitLab CI/CD"
+    - ls -la
+    - mkdir mojezadania
+    - cd mojezadania
+    - echo "Testujemy GitLab CI/CD" > mojplik.txt
+    - cat mojplik.txt
+  artifacts:
+    paths:
+      - mojezadania/
+
+zadanie1bis:
+  image: alpine
+  stage: build
+  script:
+    - echo "Testowanie GitLab CI/CD"
+    - ls -la
+    - mkdir mojezadania
+    - cd mojezadania
+    - echo "Zadanie1bis" > mojplikbis.txt
+    - cat mojplikbis.txt
+  artifacts:
+    paths:
+      - mojezadania/
+
+zadanie1_oczekiwanie:
+  image: alpine
+  stage: build
+  script:
+    - echo "Robię ważne zadania..."
+    - sleep 30
+
+
+zadanie2:
+  image: alpine
+  stage: test
+  dependencies: 
+    - zadanie1
+  needs:
+    - zadanie1
+  script:
+    - ls mojezadania/
+    - test -f mojezadania/mojplik.txt
+    - grep "GitLab" mojezadania/mojplik.txt
+
+zadanie2bis:
+  image: alpine
+  stage: test
+  dependencies: 
+    - zadanie1bis
+  script:
+    - ls mojezadania/
+    - test -f mojezadania/mojplikbis.txt
+    - grep "Zadanie1bis" mojezadania/mojplikbis.txt
+
+zadanie3:
+  image: alpine
+  stage: deploy
+  needs:
+    - zadanie1bis
+    - zadanie2
+  script:
+    - ls mojezadania/
