@@ -53,8 +53,11 @@ deploy:
   stage: deploy
   tags:
     - moj_ansible
-  needs:
-    - lint
+#  needs:
+#    - lint
+
+  # Poniżej zabezpieczenie przed wiszącym wdrożeniem (np. zawieszony SSH). 
+  # Po 30 minutach zadanie padnie – lepsze to niż nieskończone „running”.
   timeout: 30 minutes
   # Zapobiega kilku równoległym wdrożeniom na ten sam adres IP:
   resource_group: deploy-www-$[[ inputs.IP_HOSTA ]]
