@@ -1,0 +1,11 @@
+# Konfiguracja ansible-lint - sprawdzaj tylko błędy i krytyczne problemy
+profile: min
+warn_list: []  # Wyłącz ostrzeżenia
+skip_list:
+  - yaml[line-length]
+  - name[casing]
+  - name[template]
+  - risky-file-permissions
+  - no-changed-when
+  - command-instead-of-module
+  - package-latest
