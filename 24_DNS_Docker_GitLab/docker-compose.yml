@@ -1,6 +1,9 @@
 services:
   dns:
+# Ta poniższa linia była błędna (o czym w odcinku 25):
     build: .
+# A zamiast tego powinno być wskazanie pobranie obrazu z rejestru Docker Hub:
+    image: ${Login_Docker_Hub}/moj-server-dns:latest
     container_name: moj-server-dns
     ports:
       - "53:53/udp"
