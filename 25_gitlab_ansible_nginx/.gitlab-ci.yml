@@ -56,8 +56,8 @@ deploy:
 #  needs:
 #    - lint
 
-  # Poniżej zabezpieczenie przed wiszącym wdrożeniem (np. zawieszony SSH). 
-  # Po 30 minutach zadanie padnie – lepsze to niż nieskończone „running”.
+  # Poniżej zabezpieczenie przed wiszącym wdrożeniem (np. zawieszony SSH).
+  # Po 30 minutach zadanie padnie – lepsze to niż nieskończone „running".
   timeout: 30 minutes
   # Zapobiega kilku równoległym wdrożeniom na ten sam adres IP:
   resource_group: deploy-www-$[[ inputs.IP_HOSTA ]]
@@ -93,17 +93,14 @@ deploy:
       done
     - echo "Adres IP_HOSTA jest poprawny."
 
-    # Sprawdzenie, czy Ansible jest dostępny na agencie
+    # Sprawdzenie i instalacja Ansible jeśli nie jest dostępny
     - |
       if ! command -v ansible >/dev/null 2>&1; then
-        echo "BŁĄD: Ansible nie jest zainstalowany na runnerze."
-        echo "Zainstaluj Ansible na maszynie 'moj_ansible' (np. 'sudo apt install ansible') i uruchom pipeline ponownie."
-        exit 1
-      fi
-    - |
-      if ! command -v ansible-playbook >/dev/null 2>&1; then
-        echo "BŁĄD: ansible-playbook nie jest dostępny, sprawdź instalację Ansible."
-        exit 1
+        echo "Ansible nie jest zainstalowany. Instalowanie..."
+        sudo apt update
+        sudo apt install -y ansible
+      else
+        echo "Ansible już jest zainstalowany."
       fi
     - echo "Ansible jest dostępny:"
     - ansible --version
