@@ -1,0 +1,8 @@
+test_job:
+  stage: test
+  image: node:20 # Tutaj podaj dowolny kontener z Docker Hub
+  script:
+    - node -v
+    - echo "Kontener Node.js działa poprawnie!"
+  tags:
+    - docker # Użyj tutaj tagu, który nadałeś podczas rejestracji

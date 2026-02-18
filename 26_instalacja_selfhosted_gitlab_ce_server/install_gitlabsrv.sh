@@ -5,20 +5,20 @@ set -euo pipefail
 # SEKCJA KONFIGURACJI - DOSTOSUJ SKRYPT DO SWOICH POTRZEB
 ###############################################################################
 
-# Domena DNS dla instancji serwera GitLab
+# Podaj domenę DNS dla instancji serwera GitLab
 # Przykład: gitlab.example.com lub adres IP serwera
 GITLAB_DOMAIN="gitlab.example.com"
 
-# Nowy port SSH systemu hosta (zwolnienie portu 22 dla GitLab)
-# Po instalacji połączenia SSH do serwera: ssh -p ${SSH_NEW_PORT} user@host
+# Nowy port SSH systemu hosta (na potrzeby zwolnienia portu 22 dla GitLab)
+# Po tej zmianie połączenia SSH do serwera należy wykonywać: ssh -p ${SSH_NEW_PORT} user@host
 # GitLab przejmie port 22 dla operacji git clone / push / pull
 SSH_NEW_PORT=2222
 
-# Katalog główny dla danych serwera GitLab (konfiguracja, logi, dane)
+# Podaj ścieżkę katalogu głównego dla danych serwera GitLab (konfiguracja, logi, dane)
 GITLAB_DIR="/gitlabsrv"
 
 # ---------------------------------------------------------------------------
-# Wybór trybu SSL/HTTPS
+# Wybierz tryb SSL/HTTPS
 # "selfsigned"  — certyfikat samopodpisany (wildcard); nie wymaga publicznego DNS
 # "letsencrypt" — certyfikat Let's Encrypt; wymaga publicznie dostępnej domeny
 #                 oraz otwartego portu 80 (challenge ACME HTTP-01)
@@ -44,13 +44,18 @@ LE_EMAIL="admin@example.com"         # E-mail do powiadomień o wygasaniu certyf
 # ---------------------------------------------------------------------------
 # Konfiguracja SMTP — wysyłanie e-maili przez konto Gmail
 # Wymagane: włączone 2FA w Google + wygenerowane hasło do aplikacji
-# Jak uzyskać hasło do aplikacji: https://myaccount.google.com/apppasswords
+# Hasło do aplikacji nalezy uzyskać: https://myaccount.google.com/apppasswords
 # ---------------------------------------------------------------------------
 SMTP_USER="twoj.adres@gmail.com"          # Adres konta Gmail (login SMTP)
 SMTP_PASSWORD="twojehasloaplikacji"        # 16-znakowe hasło do aplikacji Google (bez spacji)
 EMAIL_FROM="twoj.adres@gmail.com"          # Adres nadawcy (musi być zgodny z SMTP_USER)
 EMAIL_DISPLAY_NAME="GitLab Mojadomena"     # Wyświetlana nazwa nadawcy w e-mailach
 EMAIL_REPLY_TO="twoj.adres@gmail.com"      # Adres do odpowiedzi
+
+
+
+
+
 
 ###############################################################################
 # KONIEC SEKCJI KONFIGURACJI - nie modyfikuj poniżej tej linii
@@ -266,11 +271,12 @@ fi
 ###############################################################################
 step "KROK 5: Tworzenie struktury katalogów w ${GITLAB_DIR}"
 
-mkdir -p "${GITLAB_DIR}"/{config,data,logs}
+mkdir -p "${GITLAB_DIR}"/{config,data,logs,runner-config}
 ok "Katalogi gotowe:"
-ok "  ${GITLAB_DIR}/config  — konfiguracja GitLab"
-ok "  ${GITLAB_DIR}/logs    — logi GitLab"
-ok "  ${GITLAB_DIR}/data    — dane aplikacji GitLab"
+ok "  ${GITLAB_DIR}/config         — konfiguracja GitLab"
+ok "  ${GITLAB_DIR}/logs           — logi GitLab"
+ok "  ${GITLAB_DIR}/data           — dane aplikacji GitLab"
+ok "  ${GITLAB_DIR}/runner-config  — konfiguracja GitLab Runner"
 
 ###############################################################################
 # KROK 6: Certyfikat SSL
@@ -393,6 +399,14 @@ services:
       - './logs:/var/log/gitlab'
       - './data:/var/opt/gitlab'
     shm_size: '256m'
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    container_name: gitlab-runner
+    restart: always
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - './runner-config:/etc/gitlab-runner'
 EOF
 
 else
@@ -444,6 +458,14 @@ services:
       - './logs:/var/log/gitlab'
       - './data:/var/opt/gitlab'
     shm_size: '256m'
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    container_name: gitlab-runner
+    restart: always
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - './runner-config:/etc/gitlab-runner'
 EOF
 
 fi
@@ -536,16 +558,13 @@ fi
 echo -e "${GREEN}║${NC}"
 echo -e "${GREEN}╠══════════════════════════════════════════════════════════════╣${NC}"
 echo -e "${GREEN}║${NC}"
-echo -e "${GREEN}║${NC}  ${YELLOW}Poczta wychodząca (SMTP):${NC} Gmail / ${SMTP_USER}"
+echo -e "${GREEN}║${NC}  ${YELLOW}Wykorzystywana poczta wychodząca (SMTP):${NC} Gmail / ${SMTP_USER}"
 echo -e "${GREEN}║${NC}    Nadawca: ${EMAIL_DISPLAY_NAME} <${EMAIL_FROM}>"
 echo -e "${GREEN}║${NC}"
 echo -e "${GREEN}╠══════════════════════════════════════════════════════════════╣${NC}"
 echo -e "${GREEN}║${NC}"
 echo -e "${GREEN}║${NC}  ${YELLOW}SSH systemu hosta:${NC} port ${SSH_NEW_PORT}"
 echo -e "${GREEN}║${NC}    Połączenie: ssh -p ${SSH_NEW_PORT} user@${GITLAB_DOMAIN}"
-echo -e "${GREEN}║${NC}"
-echo -e "${GREEN}║${NC}  ${YELLOW}SSH GitLab (git):${NC}  port 22"
-echo -e "${GREEN}║${NC}    Klonowanie:  git@${GITLAB_DOMAIN}:uzytkownik/repozytorium.git"
 echo -e "${GREEN}║${NC}"
 echo -e "${GREEN}║${NC}  ${YELLOW}Katalog danych:${NC}    ${GITLAB_DIR}/"
 echo -e "${GREEN}║${NC}"
@@ -561,6 +580,9 @@ echo -e "${GREEN}║${NC}"
 echo -e "${GREEN}║${NC}  Ręczny odczyt hasła root (jeśli plik nadal istnieje):"
 echo -e "${GREEN}║${NC}  ${BLUE}sudo docker exec -it gitlab grep 'Password:' \\${NC}"
 echo -e "${GREEN}║${NC}  ${BLUE}  /etc/gitlab/initial_root_password${NC}"
+echo -e "${GREEN}║${NC}"
+echo -e "${GREEN}║${NC}  Pamiętaj o zarejestrowaniu agenta GitLab Runner w kontenerze 'gitlab-runner'.
+echo -e "${GREEN}║${NC}  Wykorzystaj do tego celu skrypt rejestracyjny: register_runner.sh
 echo -e "${GREEN}║${NC}"
 echo -e "${GREEN}╚══════════════════════════════════════════════════════════════╝${NC}"
 echo ""

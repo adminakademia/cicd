@@ -413,7 +413,7 @@ docker exec -it gitlab-runner gitlab-runner register \
 # Aby móc wewnątrz potoku budować własne obrazy (używać komendy docker build), musisz edytować plik # konfiguracyjny runnera, który utworzył się w ./runner-config/config.toml:
 
 # Otwórz plik: 
-mcedit ./runner-config/config.toml
+mcedit /gitlabsrv/runner-config/config.toml
 
 # W sekcji [runners.docker] znajdź parametr privileged i zmień go na true.
 # W sekcji volumes upewnij się, że masz: volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache"]
@@ -425,12 +425,12 @@ mcedit ./runner-config/config.toml
 
 test_job:
   stage: test
-  image: node:20 # Tutaj wskazujesz dowolny kontener z Docker Hub
+  image: node:20 # Tutaj podaj dowolny kontener z Docker Hub
   script:
     - node -v
     - echo "Kontener Node.js działa poprawnie!"
   tags:
-    - docker # Użyj tagu, który nadałeś podczas rejestracji
+    - docker # Użyj tutaj tagu, który nadałeś podczas rejestracji
 
 
 
