@@ -577,11 +577,11 @@ echo -e "${GREEN}║${NC}"
 echo -e "${GREEN}║${NC}  Śledzenie logów kontenera:"
 echo -e "${GREEN}║${NC}  ${BLUE}cd ${GITLAB_DIR} && docker compose logs -f gitlab${NC}"
 echo -e "${GREEN}║${NC}"
-echo -e "${GREEN}║${NC}  Ręczny odczyt hasła root (jeśli plik nadal istnieje):"
+echo -e "${GREEN}║${NC}  Ręczny odczyt hasła root w razie czego (jeśli plik nadal istnieje):"
 echo -e "${GREEN}║${NC}  ${BLUE}sudo docker exec -it gitlab grep 'Password:' \\${NC}"
 echo -e "${GREEN}║${NC}  ${BLUE}  /etc/gitlab/initial_root_password${NC}"
 echo -e "${GREEN}║${NC}"
-echo -e "${GREEN}║${NC}  Pamiętaj o zarejestrowaniu agenta GitLab Runner w kontenerze 'gitlab-runner'.
+echo -e "${GREEN}║${NC}  !!!! Pamiętaj także o zarejestrowaniu agenta GitLab Runner w kontenerze 'gitlab-runner'.
 echo -e "${GREEN}║${NC}  Wykorzystaj do tego celu skrypt rejestracyjny: register_runner.sh
 echo -e "${GREEN}║${NC}"
 echo -e "${GREEN}╚══════════════════════════════════════════════════════════════╝${NC}"
