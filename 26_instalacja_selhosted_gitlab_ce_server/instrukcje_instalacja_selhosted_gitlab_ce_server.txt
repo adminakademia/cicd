@@ -1,0 +1,429 @@
+### Wstępna konfiguracja i instalacja oprogramowania ###
+
+hostnamectl set-hostname gitlabsrv
+apt update && apt upgrade -y 
+apt install mc sudo curl htop cron -y
+
+### Opcjonalnie: Instalacja UFW ###
+
+apt install ufw -y
+ufw allow ssh
+ufw allow 80,443,22,2222/tcp
+ufw enable
+ufw status
+ufw status verbose
+
+
+### Zmiana portu SSH systemu hosta, aby gitlab mógł ten port przejąć ###
+## Aby GitLab mógł korzystać ze standardowego portu 22 (co pozwala na ładne adresy klonowania typu
+## git@gitlab.karcewicz.pl:...), musimy przenieść demona SSH systemu Debian na inny port (np. 2022).
+
+
+mcedit /etc/ssh/sshd_config
+
+# i zmieniamy:
+
+#Port 22
+
+na:
+
+Port 2222
+
+# Zrestartuj usługę SSH:
+systemctl restart ssh
+
+
+
+### Instalacja Docker w systemie ###
+
+# Add Docker's official GPG key:
+sudo apt update
+sudo apt install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+
+### Instalacja gitlab srv jako kontener Docker ###
+
+# Utwórz katalog główny dla projektu
+mkdir -p /gitlabsrv
+
+# Utwórz podkatalogi dla wolumenów
+mkdir -p /gitlabsrv/{config,data,logs}
+
+# Przejdź do katalogu
+cd /gitlabsrv
+
+
+# Utwórz plik docker-compose.yml w katalogu /opt/gitlab-docker:
+
+mcedit /gitlabsrv/docker-compose.yml
+
+# z zawartością:
+
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: gitlab
+    restart: always
+    hostname: 'gitlab.karcewicz.pl'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.karcewicz.pl'
+        gitlab_rails['gitlab_shell_ssh_port'] = 22
+        gitlab_rails['time_zone'] = 'Europe/Warsaw'
+        prometheus_monitoring['enable'] = false
+        puma['worker_processes'] = 2
+        puma['min_threads'] = 1
+        puma['max_threads'] = 4
+        sidekiq['concurrency'] = 5
+        registry['enable'] = false
+    ports:
+      - '80:80'
+      - '443:443'
+      - '22:22'.
+    volumes:
+      - './config:/etc/gitlab'
+      - './logs:/var/log/gitlab'
+      - './data:/var/opt/gitlab'
+    shm_size: '256m'.
+
+
+# poniżej z ciut większymi wyjaśnieniami to samo co wyżej:
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: gitlab
+    restart: always
+    hostname: 'gitlab.karcewicz.pl' # Zmień na swoją domenę lub IP
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        # Podstawowa konfiguracja URL
+        external_url 'http://gitlab.karcewicz.pl' # Użyj https jeśli masz certyfikaty
+        
+        # Konfiguracja SSH (jeśli zmieniasz port, patrz niżej)
+        gitlab_rails['gitlab_shell_ssh_port'] = 22
+
+        # Ustawienie strefy czasowej
+        gitlab_rails['time_zone'] = 'Europe/Warsaw'
+        
+        # OPTYMALIZACJA PAMIĘCI (Dla serwerów z <8GB RAM) [4, 8]
+        # Wyłączenie monitoringu Prometheus (oszczędza ok. 200-500MB RAM)
+        prometheus_monitoring['enable'] = false
+        
+        # Redukcja procesów Puma (serwer WWW)
+        puma['worker_processes'] = 2
+        puma['min_threads'] = 1
+        puma['max_threads'] = 4
+        
+        # Redukcja procesów Sidekiq (kolejkowanie zadań)
+        sidekiq['concurrency'] = 5
+        
+        # Wyłączenie rejestru kontenerów (jeśli nie planujesz używać)
+        registry['enable'] = false
+        
+    ports:
+      - '80:80'
+      - '443:443'
+      - '22:22' 
+    volumes:
+      - './config:/etc/gitlab'
+      - './logs:/var/log/gitlab'
+      - './data:/var/opt/gitlab'
+    shm_size: '256m' 
+	
+
+###
+#• shm_size: '256m': To ustawienie jest krytyczne. Domyślny rozmiar pamięci współdzielonej w Dockerze #(64MB) jest zbyt mały dla usług monitoringu GitLaba (Prometheus), co często powoduje błędy. Zwiększenie # do 256MB rozwiązuje ten problem
+###
+
+
+
+
+### Uruchomienie serwera GitLab ###
+# Będąc w katalogu z plikiem docker-compose.yml, uruchom kontener w tle:
+
+sudo docker compose up -d
+
+# Oczekiwanie na start: Pierwsze uruchomienie GitLab może potrwać od 3 do nawet 10 minut, 
+# w zależności od szybkości dysku i procesora. Możesz śledzić postęp poleceniem:
+
+sudo docker compose logs -f gitlab
+
+
+
+### Pobranie hasła administratora i pierwsze logowanie ###
+
+# GitLab automatycznie generuje losowe hasło dla użytkownika root. Aby je odczytać, wykonaj polecenie na działającym kontenerze:
+
+sudo docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password
+
+# 1. Otwórz przeglądarkę i wejdź na adres: http://gitlab.karcewicz.pl.
+# 2. Zaloguj się jako użytkownik: root.
+# 3. Jako hasło podaj ciąg znaków uzyskany z powyższego polecenia.
+
+
+### Konfiguracja po instalacji (Zalecane)
+Po zalogowaniu wykonaj kluczowe czynności bezpieczeństwa:
+1. Zmiana hasła root: Kliknij w awatar w prawym górnym rogu -> Edit profile -> Password. Ustaw własne, bezpieczne hasło, ponieważ plik initial_root_password jest usuwany po 24h.
+2. Wyłączenie otwartej rejestracji: Domyślnie każdy może założyć konto.
+    ◦ Idź do: Admin Area (ikona w lewym pasku lub przez Menu) -> Settings -> General.
+    ◦ Rozwiń Sign-up restrictions.
+    ◦ Odznacz Sign-up enabled.
+    ◦ Kliknij Save changes.
+
+
+
+##### Dodajemy certyfikat samopodpisany do obsługi SSL ##### 
+
+#### Wygenerowanie certyfikatu SSL samopodpisanego
+
+# Tworzymy katalog 
+
+mkdir /gitlabsrv/config/ssl
+
+# Generujemy certyfikat samopodpisany:
+
+openssl req -new -days 365 -nodes -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -subj "/C=PL/ST=SLASK/L=Gliwice/O=Contoso/OU=IT/CN=*.karcewicz.pl/emailAddress=kontakt@adminakademia.pl" -keyout /gitlabsrv/config/ssl/certwild.key -out /gitlabsrv/config/ssl/certwild.pem -addext "subjectAltName=DNS:karcewicz.pl,DNS:*.karcewicz.pl"
+
+
+# zmieniamy:
+
+mcedit /gitlabsrv/docker-compose.yml
+
+
+environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        # 1. Ustawienie adresu na HTTPS
+        external_url 'https://gitlab.karcewicz.pl'
+        
+        # 2. Wyłączenie automatycznego Let's Encrypt (bo masz własne pliki)
+        letsencrypt['enable'] = false
+        
+        # 3. Wymuszenie przekierowania z HTTP na HTTPS
+        nginx['redirect_http_to_https'] = true
+        
+        # 4. Jeśli Twoje pliki nazywają się inaczej niż domena,
+        # popraw poniższe ścieżki (ścieżki wewnątrz kontenera!):
+        nginx['ssl_certificate'] = "/etc/gitlab/ssl/certwild.pem"
+        nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/certwild.key"
+        
+
+
+# Czyli w skrócie w całości teraz:
+
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.karcewicz.pl'
+        gitlab_rails['gitlab_shell_ssh_port'] = 22
+        gitlab_rails['time_zone'] = 'Europe/Warsaw'
+        prometheus_monitoring['enable'] = false
+        puma['worker_processes'] = 2
+        puma['min_threads'] = 1
+        puma['max_threads'] = 4
+        sidekiq['concurrency'] = 5
+        registry['enable'] = false
+		letsencrypt['enable'] = false
+		nginx['redirect_http_to_https'] = true
+        nginx['ssl_certificate'] = "/etc/gitlab/ssl/certwild.pem"
+        nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/certwild.key"
+
+
+# Uruchamiamy kontener po zmianach:
+
+cd /gitlabsrv/
+docker compose up -d --force-recreate
+
+
+##### Gdyby chcieć wykorzystać certyfikat SSL z Lets Encrypt ##### 
+
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        # Zmiana na HTTPS
+        external_url 'https://gitlab.karcewicz.pl'
+        
+        
+        # Włączenie Let's Encrypt
+        letsencrypt['enable'] = true
+        # Podaj swój prawdziwy email, aby otrzymywać powiadomienia o wygasaniu certyfikatu
+        letsencrypt['contact_emails'] = ['admin@karcewicz.pl'] 
+        letsencrypt['auto_renew'] = true
+        # Odnawianie certyfikatu co 7 dni o godzinie 12:30 (opcjonalne, domyślnie jest automat)
+        letsencrypt['auto_renew_hour'] = 12
+        letsencrypt['auto_renew_minute'] = 30
+        letsencrypt['auto_renew_day_of_month'] = "*/7"
+        
+        # Opcjonalnie: Przekierowanie HTTP na HTTPS (domyślnie włączone przy HTTPS)
+        nginx['redirect_http_to_https'] = true
+		
+		
+
+##### Dodajemy możliwość wysyłki e-maili ##### 
+
+
+# Krok 1: Wygenerowanie hasła do aplikacji w Google
+1. Zaloguj się na swoje konto Google i wejdź w ustawienia bezpieczeństwa:
+https://myaccount.google.com/apppasswords
+
+2. Upewnij się, że masz włączoną Weryfikację dwuetapową (2FA) – jest to wymagane.
+3. Wyszukaj opcję "Hasła do aplikacji" (App Passwords).
+4. Wygeneruj nowe hasło (nazwij je np. "GitLab"). Otrzymasz 16-znakowy kod – to jest Twoje smtp_password.
+
+# Krok 2: Edycja pliku docker-compose.yml
+
+
+Dodatkowe linie w sekcji environment:
+
+
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        
+        # --- KONFIGURACJA GMAIL SMTP ---
+        gitlab_rails['smtp_enable'] = true
+        gitlab_rails['smtp_address'] = "smtp.gmail.com"
+        gitlab_rails['smtp_port'] = 587
+        gitlab_rails['smtp_user_name'] = "twoj.adres@gmail.com"
+        # Poniżej wklej wygenerowane 16-znakowe hasło do aplikacji (bez spacji)
+        gitlab_rails['smtp_password'] = "twojehasloaplikacji"
+        gitlab_rails['smtp_domain'] = "smtp.gmail.com"
+        gitlab_rails['smtp_authentication'] = "login"
+        gitlab_rails['smtp_enable_starttls_auto'] = true
+        gitlab_rails['smtp_tls'] = false
+        gitlab_rails['smtp_openssl_verify_mode'] = 'peer'
+        
+        # Ważne: Adres nadawcy musi być zgodny z kontem Gmail
+        gitlab_rails['gitlab_email_from'] = 'twoj.adres@gmail.com'
+        gitlab_rails['gitlab_email_display_name'] = 'GitLab Karcewicz'
+        gitlab_rails['gitlab_email_reply_to'] = 'twoj.adres@gmail.com'
+
+
+# Krok 3: Zastosowanie zmian
+
+sudo docker compose up -d
+
+
+# Krok 4: Test wysyłki e-maila
+
+sudo docker exec -it gitlab gitlab-rails console
+
+Notify.test_email('gitlabsrvtest@simple.karcewicz.pl', 'Test z GitLaba', 'Wiadomość testowa wysłana z kontenera Docker').deliver_now
+
+exit
+
+
+# Jeśli powyższe polecenie zwróci błąd lub mail nie dotrze, możesz sprawdzić logi błędów poczty bezpośrednio z terminala (nie wchodząc do konsoli Rails), wpisując:
+sudo docker logs gitlab | grep -i smtp
+
+
+
+
+
+##### Dodajemy runnera ##### 
+
+
+
+# 1. Dodanie Runnera do docker-compose.yml
+# Najpierw musisz dodać usługę runnera do swojego istniejącego pliku. Kluczowe jest zamontowanie gniazda # Dockera (/var/run/docker.sock), aby runner mógł uruchamiać kontenery na Twoim serwerze.
+
+
+# Zaktualizuj swój plik o poniższą sekcję:
+
+mcedit /gitlabsrv/docker-compose.yml
+
+
+services:
+  gitlab:
+    # Twoja obecna konfiguracja...
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    container_name: gitlab-runner
+    restart: always
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock' # Dostęp do Dockera hosta
+      - './runner-config:/etc/gitlab-runner'      # Trwałość konfiguracji
+
+# Następnie uruchom go: 
+
+cd /gitlabsrv/
+docker compose up -d --force-recreate
+
+
+# 2. Pobranie tokenu rejestracyjnego
+# Zanim zarejestrujesz runnera, potrzebujesz tokenu ze swojego interfejsu GitLab:
+
+# Zaloguj się jako administrator (root).
+# Przejdź do Admin Area > CI/CD > Runners.
+# Kliknij Create instance runner.
+# Zdefiniuj tagi (np. docker) i kliknij Create runner. Zobaczysz token – skopiuj go.
+
+
+# 3. Rejestracja Runnera
+
+cp /gitlabsrv/config/ssl/certwild.pem /gitlabsrv/runner-config
+
+# Teraz musisz "połączyć" kontener runnera z Twoim serwerem GitLab. Wykonaj poniższą komendę w terminalu # serwera:
+
+docker exec -it gitlab-runner gitlab-runner register \
+  --non-interactive \
+  --url "https://gitlab.karcewicz.pl/" \
+  --token "<tutaj_wpisz_token>" \
+  --tls-ca-file "/etc/gitlab-runner/certwild.pem" \
+  --executor "docker" \
+  --docker-image "alpine:latest" \
+  --description "docker-runner"
+
+
+
+# 4. Ważna konfiguracja (Dind - Docker in Docker)
+# Aby móc wewnątrz potoku budować własne obrazy (używać komendy docker build), musisz edytować plik # konfiguracyjny runnera, który utworzył się w ./runner-config/config.toml:
+
+# Otwórz plik: 
+mcedit ./runner-config/config.toml
+
+# W sekcji [runners.docker] znajdź parametr privileged i zmień go na true.
+# W sekcji volumes upewnij się, że masz: volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache"]
+
+
+# 5. Testowanie (Plik .gitlab-ci.yml)
+# Teraz w swoim projekcie stwórz plik .gitlab-ci.yml, aby sprawdzić, czy możesz uruchomić dowolny 
+# kontener (np. Node.js):
+
+test_job:
+  stage: test
+  image: node:20 # Tutaj wskazujesz dowolny kontener z Docker Hub
+  script:
+    - node -v
+    - echo "Kontener Node.js działa poprawnie!"
+  tags:
+    - docker # Użyj tagu, który nadałeś podczas rejestracji
+
+
+
+######## Aktualizacja serwera GitLab ######## 
+
+
+cd /gitlabsrv/
+sudo docker compose pull
+sudo docker compose up -d --force-recreate
+
+
+
+
+
+
+
