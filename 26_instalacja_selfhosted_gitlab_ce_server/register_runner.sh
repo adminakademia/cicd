@@ -6,7 +6,7 @@ set -euo pipefail
 ###############################################################################
 
 # Token rejestracyjny runnera
-# Jak uzyskać: Admin Area → CI/CD → Runners → "Create instance runner"
+# Aby go uzyskać: Admin Area → CI/CD → Runners → "Create instance runner"
 #              Zdefiniuj tagi (np. docker), kliknij "Create runner" i skopiuj token
 RUNNER_TOKEN="<tutaj_wpisz_token>"
 
@@ -14,8 +14,8 @@ RUNNER_TOKEN="<tutaj_wpisz_token>"
 # Musi być identyczny jak GITLAB_DOMAIN użyty w skrypcie install_gitlabsrv.sh
 GITLAB_URL="https://gitlab.example.com/"
 
-# Domyślny obraz Docker używany w pipeline'ach (z hub.docker.com)
-# Można go nadpisać w definicji pipeline'u (image: ...)
+# Domyślnie wykorzystywany obraz Docker używany w przepływach/pipeline'ach (z hub.docker.com)
+# Można go oczywiście nadpisać w definicji przepływu/pipeline'u (image: ...)
 DOCKER_IMAGE="alpine:latest"
 
 # Katalog główny GitLab — musi być identyczny jak GITLAB_DIR w install_gitlabsrv.sh
