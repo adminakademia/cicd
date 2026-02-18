@@ -41,6 +41,17 @@ SSL_EMAIL="kontakt@example.com"      # Adres e-mail w certyfikacie
 # ---------------------------------------------------------------------------
 LE_EMAIL="admin@example.com"         # E-mail do powiadomień o wygasaniu certyfikatu
 
+# ---------------------------------------------------------------------------
+# Konfiguracja SMTP — wysyłanie e-maili przez konto Gmail
+# Wymagane: włączone 2FA w Google + wygenerowane hasło do aplikacji
+# Jak uzyskać hasło do aplikacji: https://myaccount.google.com/apppasswords
+# ---------------------------------------------------------------------------
+SMTP_USER="twoj.adres@gmail.com"          # Adres konta Gmail (login SMTP)
+SMTP_PASSWORD="twojehasloaplikacji"        # 16-znakowe hasło do aplikacji Google (bez spacji)
+EMAIL_FROM="twoj.adres@gmail.com"          # Adres nadawcy (musi być zgodny z SMTP_USER)
+EMAIL_DISPLAY_NAME="GitLab Mojadomena"     # Wyświetlana nazwa nadawcy w e-mailach
+EMAIL_REPLY_TO="twoj.adres@gmail.com"      # Adres do odpowiedzi
+
 ###############################################################################
 # KONIEC SEKCJI KONFIGURACJI - nie modyfikuj poniżej tej linii
 ###############################################################################
@@ -93,6 +104,12 @@ fi
 if [[ "$SSL_MODE" == "letsencrypt" ]]; then
     [[ -z "$LE_EMAIL" ]] && die "Zmienna LE_EMAIL jest pusta. Uzupełnij sekcję konfiguracji."
 fi
+
+[[ -z "$SMTP_USER" ]]         && die "Zmienna SMTP_USER jest pusta. Uzupełnij sekcję konfiguracji."
+[[ -z "$SMTP_PASSWORD" ]]     && die "Zmienna SMTP_PASSWORD jest pusta. Uzupełnij sekcję konfiguracji."
+[[ -z "$EMAIL_FROM" ]]        && die "Zmienna EMAIL_FROM jest pusta. Uzupełnij sekcję konfiguracji."
+[[ -z "$EMAIL_DISPLAY_NAME" ]] && die "Zmienna EMAIL_DISPLAY_NAME jest pusta. Uzupełnij sekcję konfiguracji."
+[[ -z "$EMAIL_REPLY_TO" ]]    && die "Zmienna EMAIL_REPLY_TO jest pusta. Uzupełnij sekcję konfiguracji."
 
 # Wyprowadź domenę główną z GITLAB_DOMAIN (np. gitlab.example.com → example.com)
 # Używana jako baza dla certyfikatu wildcard *.domena.pl
@@ -354,6 +371,19 @@ services:
         nginx['redirect_http_to_https'] = true
         nginx['ssl_certificate'] = "/etc/gitlab/ssl/certwild.pem"
         nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/certwild.key"
+        gitlab_rails['smtp_enable'] = true
+        gitlab_rails['smtp_address'] = "smtp.gmail.com"
+        gitlab_rails['smtp_port'] = 587
+        gitlab_rails['smtp_user_name'] = "${SMTP_USER}"
+        gitlab_rails['smtp_password'] = "${SMTP_PASSWORD}"
+        gitlab_rails['smtp_domain'] = "smtp.gmail.com"
+        gitlab_rails['smtp_authentication'] = "login"
+        gitlab_rails['smtp_enable_starttls_auto'] = true
+        gitlab_rails['smtp_tls'] = false
+        gitlab_rails['smtp_openssl_verify_mode'] = 'peer'
+        gitlab_rails['gitlab_email_from'] = '${EMAIL_FROM}'
+        gitlab_rails['gitlab_email_display_name'] = '${EMAIL_DISPLAY_NAME}'
+        gitlab_rails['gitlab_email_reply_to'] = '${EMAIL_REPLY_TO}'
     ports:
       - '80:80'
       - '443:443'
@@ -392,6 +422,19 @@ services:
         letsencrypt['auto_renew_minute'] = 30
         letsencrypt['auto_renew_day_of_month'] = "*/7"
         nginx['redirect_http_to_https'] = true
+        gitlab_rails['smtp_enable'] = true
+        gitlab_rails['smtp_address'] = "smtp.gmail.com"
+        gitlab_rails['smtp_port'] = 587
+        gitlab_rails['smtp_user_name'] = "${SMTP_USER}"
+        gitlab_rails['smtp_password'] = "${SMTP_PASSWORD}"
+        gitlab_rails['smtp_domain'] = "smtp.gmail.com"
+        gitlab_rails['smtp_authentication'] = "login"
+        gitlab_rails['smtp_enable_starttls_auto'] = true
+        gitlab_rails['smtp_tls'] = false
+        gitlab_rails['smtp_openssl_verify_mode'] = 'peer'
+        gitlab_rails['gitlab_email_from'] = '${EMAIL_FROM}'
+        gitlab_rails['gitlab_email_display_name'] = '${EMAIL_DISPLAY_NAME}'
+        gitlab_rails['gitlab_email_reply_to'] = '${EMAIL_REPLY_TO}'
     ports:
       - '80:80'
       - '443:443'
@@ -490,6 +533,11 @@ else
     echo -e "${GREEN}║${NC}    Powiadomienia o wygasaniu: ${LE_EMAIL}"
     echo -e "${GREEN}║${NC}    Automatyczne odnawianie: co 7 dni o 12:30"
 fi
+echo -e "${GREEN}║${NC}"
+echo -e "${GREEN}╠══════════════════════════════════════════════════════════════╣${NC}"
+echo -e "${GREEN}║${NC}"
+echo -e "${GREEN}║${NC}  ${YELLOW}Poczta wychodząca (SMTP):${NC} Gmail / ${SMTP_USER}"
+echo -e "${GREEN}║${NC}    Nadawca: ${EMAIL_DISPLAY_NAME} <${EMAIL_FROM}>"
 echo -e "${GREEN}║${NC}"
 echo -e "${GREEN}╠══════════════════════════════════════════════════════════════╣${NC}"
 echo -e "${GREEN}║${NC}"
