@@ -270,7 +270,27 @@ docker compose up -d --force-recreate
         # Opcjonalnie: Przekierowanie HTTP na HTTPS (domyślnie włączone przy HTTPS)
         nginx['redirect_http_to_https'] = true
 		
-		
+
+# Czyli w skrócie w całości teraz cała sekcja "GITLAB_OMNIBUS_CONFIG:" wyglądać powinna tak:
+
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.mojadomena.pl'
+        gitlab_rails['gitlab_shell_ssh_port'] = 22
+        gitlab_rails['time_zone'] = 'Europe/Warsaw'
+        prometheus_monitoring['enable'] = false
+        puma['worker_processes'] = 2
+        puma['min_threads'] = 1
+        puma['max_threads'] = 4
+        sidekiq['concurrency'] = 5
+        registry['enable'] = false
+        letsencrypt['enable'] = true
+        letsencrypt['contact_emails'] = ['admin@mojadomena.pl'] 
+        letsencrypt['auto_renew'] = true
+        letsencrypt['auto_renew_hour'] = 12
+        letsencrypt['auto_renew_minute'] = 30
+        letsencrypt['auto_renew_day_of_month'] = "*/7"
+        nginx['redirect_http_to_https'] = true
+
 
 ##### Dodajemy możliwość wysyłki e-maili ##### 
 
