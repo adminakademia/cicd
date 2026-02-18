@@ -16,7 +16,7 @@ ufw status verbose
 
 ### Zmiana portu SSH systemu hosta, aby gitlab mógł ten port przejąć ###
 ## Aby GitLab mógł korzystać ze standardowego portu 22 (co pozwala na ładne adresy klonowania typu
-## git@gitlab.karcewicz.pl:...), musimy przenieść demona SSH systemu Debian na inny port (np. 2022).
+## git@gitlab.mojadomena.pl:...), musimy przenieść demona SSH systemu Debian na inny port (np. 2022).
 
 
 mcedit /etc/ssh/sshd_config
@@ -81,10 +81,10 @@ services:
     image: gitlab/gitlab-ce:latest
     container_name: gitlab
     restart: always
-    hostname: 'gitlab.karcewicz.pl'
+    hostname: 'gitlab.mojadomena.pl'
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://gitlab.karcewicz.pl'
+        external_url 'http://gitlab.mojadomena.pl'
         gitlab_rails['gitlab_shell_ssh_port'] = 22
         gitlab_rails['time_zone'] = 'Europe/Warsaw'
         prometheus_monitoring['enable'] = false
@@ -96,12 +96,12 @@ services:
     ports:
       - '80:80'
       - '443:443'
-      - '22:22'.
+      - '22:22'
     volumes:
       - './config:/etc/gitlab'
       - './logs:/var/log/gitlab'
       - './data:/var/opt/gitlab'
-    shm_size: '256m'.
+    shm_size: '256m'
 
 
 # poniżej z ciut większymi wyjaśnieniami to samo co wyżej:
@@ -110,11 +110,11 @@ services:
     image: gitlab/gitlab-ce:latest
     container_name: gitlab
     restart: always
-    hostname: 'gitlab.karcewicz.pl' # Zmień na swoją domenę lub IP
+    hostname: 'gitlab.mojadomena.pl' # Zmień na swoją domenę lub IP
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         # Podstawowa konfiguracja URL
-        external_url 'http://gitlab.karcewicz.pl' # Użyj https jeśli masz certyfikaty
+        external_url 'http://gitlab.mojadomena.pl' # Użyj https jeśli masz certyfikaty
         
         # Konfiguracja SSH (jeśli zmieniasz port, patrz niżej)
         gitlab_rails['gitlab_shell_ssh_port'] = 22
@@ -173,7 +173,7 @@ sudo docker compose logs -f gitlab
 
 sudo docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password
 
-# 1. Otwórz przeglądarkę i wejdź na adres: http://gitlab.karcewicz.pl.
+# 1. Otwórz przeglądarkę i wejdź na adres: http://gitlab.mojadomena.pl.
 # 2. Zaloguj się jako użytkownik: root.
 # 3. Jako hasło podaj ciąg znaków uzyskany z powyższego polecenia.
 
@@ -199,7 +199,7 @@ mkdir /gitlabsrv/config/ssl
 
 # Generujemy certyfikat samopodpisany:
 
-openssl req -new -days 365 -nodes -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -subj "/C=PL/ST=SLASK/L=Gliwice/O=Contoso/OU=IT/CN=*.karcewicz.pl/emailAddress=kontakt@adminakademia.pl" -keyout /gitlabsrv/config/ssl/certwild.key -out /gitlabsrv/config/ssl/certwild.pem -addext "subjectAltName=DNS:karcewicz.pl,DNS:*.karcewicz.pl"
+openssl req -new -days 365 -nodes -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -subj "/C=PL/ST=SLASK/L=Gliwice/O=Contoso/OU=IT/CN=*.mojadomena.pl/emailAddress=kontakt@mojadomena.pl" -keyout /gitlabsrv/config/ssl/certwild.key -out /gitlabsrv/config/ssl/certwild.pem -addext "subjectAltName=DNS:mojadomena.pl,DNS:*.mojadomena.pl"
 
 
 # zmieniamy:
@@ -210,7 +210,7 @@ mcedit /gitlabsrv/docker-compose.yml
 environment:
       GITLAB_OMNIBUS_CONFIG: |
         # 1. Ustawienie adresu na HTTPS
-        external_url 'https://gitlab.karcewicz.pl'
+        external_url 'https://gitlab.mojadomena.pl'
         
         # 2. Wyłączenie automatycznego Let's Encrypt (bo masz własne pliki)
         letsencrypt['enable'] = false
@@ -228,7 +228,7 @@ environment:
 # Czyli w skrócie w całości teraz:
 
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'https://gitlab.karcewicz.pl'
+        external_url 'https://gitlab.mojadomena.pl'
         gitlab_rails['gitlab_shell_ssh_port'] = 22
         gitlab_rails['time_zone'] = 'Europe/Warsaw'
         prometheus_monitoring['enable'] = false
@@ -254,13 +254,13 @@ docker compose up -d --force-recreate
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         # Zmiana na HTTPS
-        external_url 'https://gitlab.karcewicz.pl'
+        external_url 'https://gitlab.mojadomena.pl'
         
         
         # Włączenie Let's Encrypt
         letsencrypt['enable'] = true
         # Podaj swój prawdziwy email, aby otrzymywać powiadomienia o wygasaniu certyfikatu
-        letsencrypt['contact_emails'] = ['admin@karcewicz.pl'] 
+        letsencrypt['contact_emails'] = ['admin@mojadomena.pl'] 
         letsencrypt['auto_renew'] = true
         # Odnawianie certyfikatu co 7 dni o godzinie 12:30 (opcjonalne, domyślnie jest automat)
         letsencrypt['auto_renew_hour'] = 12
@@ -307,7 +307,7 @@ Dodatkowe linie w sekcji environment:
         
         # Ważne: Adres nadawcy musi być zgodny z kontem Gmail
         gitlab_rails['gitlab_email_from'] = 'twoj.adres@gmail.com'
-        gitlab_rails['gitlab_email_display_name'] = 'GitLab Karcewicz'
+        gitlab_rails['gitlab_email_display_name'] = 'GitLab Mojadomena'
         gitlab_rails['gitlab_email_reply_to'] = 'twoj.adres@gmail.com'
 
 
@@ -320,7 +320,7 @@ sudo docker compose up -d
 
 sudo docker exec -it gitlab gitlab-rails console
 
-Notify.test_email('gitlabsrvtest@simple.karcewicz.pl', 'Test z GitLaba', 'Wiadomość testowa wysłana z kontenera Docker').deliver_now
+Notify.test_email('moj_adres_email@gmail.com', 'Test z GitLaba', 'Wiadomość testowa wysłana z kontenera Docker').deliver_now
 
 exit
 
@@ -380,7 +380,7 @@ cp /gitlabsrv/config/ssl/certwild.pem /gitlabsrv/runner-config
 
 docker exec -it gitlab-runner gitlab-runner register \
   --non-interactive \
-  --url "https://gitlab.karcewicz.pl/" \
+  --url "https://gitlab.mojadomena.pl/" \
   --token "<tutaj_wpisz_token>" \
   --tls-ca-file "/etc/gitlab-runner/certwild.pem" \
   --executor "docker" \
