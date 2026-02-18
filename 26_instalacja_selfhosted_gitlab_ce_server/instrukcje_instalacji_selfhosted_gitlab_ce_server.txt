@@ -225,7 +225,7 @@ environment:
         
 
 
-# Czyli w skrócie w całości teraz:
+# Czyli w skrócie w całości teraz cała sekcja "GITLAB_OMNIBUS_CONFIG:" wygląda tak:
 
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'https://gitlab.mojadomena.pl'
@@ -237,8 +237,8 @@ environment:
         puma['max_threads'] = 4
         sidekiq['concurrency'] = 5
         registry['enable'] = false
-		letsencrypt['enable'] = false
-		nginx['redirect_http_to_https'] = true
+		    letsencrypt['enable'] = false
+		    nginx['redirect_http_to_https'] = true
         nginx['ssl_certificate'] = "/etc/gitlab/ssl/certwild.pem"
         nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/certwild.key"
 
