@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+
+echo "Budowanie obrazu Docker: moj-server-dns"
+docker build -t moj-server-dns .
+
+echo "Logowanie do Docker Hub..."
+echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USER" --password-stdin
+
+echo "Tagowanie obrazu..."
+docker tag moj-server-dns:latest $DOCKER_USER/moj-server-dns:latest
+
+echo "Wysyłanie obrazu do Docker Hub..."
+docker push $DOCKER_USER/moj-server-dns:latest
+
+echo "Zakończono."

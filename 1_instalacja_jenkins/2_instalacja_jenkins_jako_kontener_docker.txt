@@ -1,64 +1,107 @@
 
 ### Instalacja Docker w Debian:
-https://docs.docker.com/engine/install/debian/
+https://docs.docker.com/engine/install/debian/   (wariant "Install using the apt repository")
 
-# Doninstalowujemy także:
-apt install docker-compose -y
+# Sprawdzenie, czy w systemie nie ma pakietów kolidujących (dla każdego: "nie znaleziono pakietu"):
+dpkg --get-selections docker.io docker-compose docker-doc docker-buildx podman-docker containerd runc
+
+# Klucz i repozytorium Dockera:
+sudo apt update
+sudo apt install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+sudo apt update
+
+# Instalacja Docker Engine razem z wtyczkami buildx i compose:
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Sprawdzenie:
+systemctl is-active docker
+docker --version
+docker compose version
+sudo docker run hello-world
+
+# UWAGA: NIE instalujemy pakietu docker-compose z Debiana ("apt install docker-compose -y" z nagrania).
+# Na Debianie 13 apt usunąłby pakiety docker-ce i docker-ce-cli. Docker Compose mamy już jako wtyczkę
+# docker-compose-plugin i wywołujemy go poleceniem "docker compose" (ze spacją zamiast łącznika).
 
 
 ### Uruchomienie Portainer:
 
 
-mkdir -p /docker/portainer
+sudo mkdir -p /docker/portainer
 
-docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer:/data portainer/portainer-ce:lts
+sudo docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer:/data portainer/portainer-ce:lts
+
+# Token konfiguracyjny (pole "Setup token"); konto administratora zakładamy w ciągu 5 minut od uruchomienia kontenera:
+sudo docker logs portainer 2>&1 | grep setup_token
+
+# Po upływie 5 minut: restart kontenera i nowy (ostatni) token:
+sudo docker restart portainer
+sudo docker logs portainer 2>&1 | grep setup_token | tail -1
+
+# Panel: https://<adres maszyny jenkins>:9443
 
 
 
-#### Wygenerowanie Certyfikatu samopodpisanego SSl
+#### Wygenerowanie certyfikatu samopodpisanego SSL (na maszynie jenkins)
 
-openssl req -new -days 36500 -nodes -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -subj "/C=PL/ST=SLASK/L=Gliwice/O=Contoso/OU=IT/CN=*.karcewicz.pl/emailAddress=kontakt@adminakademia.pl" -keyout karcewiczwild.key -out karcewiczwild.pem -addext "subjectAltName=DNS:karcewicz.pl,DNS:*.karcewicz.pl"
+mkdir -p ~/certyfikaty && cd ~/certyfikaty
+openssl req -new -days 36500 -nodes -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -subj "/C=PL/ST=SLASK/L=Gliwice/O=Contoso/OU=IT/CN=*.adminakademia.lan/emailAddress=kontakt@adminakademia.lan" -keyout adminakademiawild.key -out adminakademiawild.pem -addext "subjectAltName=DNS:adminakademia.lan,DNS:*.adminakademia.lan"
+
+openssl x509 -in adminakademiawild.pem -noout -subject -issuer -dates -ext subjectAltName,basicConstraints
 
 
 
-### Uruchomienie NPM w Portainer, plik docker-compose:
+### Uruchomienie NPM w Portainer (stos "npm"), plik docker-compose:
+### (wcięcia w YAML wyłącznie spacjami, bez tabulatorów)
 
-
-version: '3'
 services:
-  app: 
+  app:
     image: 'jc21/nginx-proxy-manager:latest'
     container_name: nginx-proxy-manager
     restart: always
     ports:
-      - '80:80' #HTTP Traffic
-      - '443:443' #HTTPS Traffic
-      - '81:81' #Dashboard Port
+      - '80:80'    # HTTP
+      - '443:443'  # HTTPS
+      - '81:81'    # panel administracyjny
     volumes:
       - '/docker/npm/data:/data'
       - '/docker/npm/letsencrypt:/etc/letsencrypt'
-	  
-	  
 
 
-## Uruchomienie Jenkins Docker w Portainer, plik docker-compose:
 
+## Uruchomienie Jenkins Docker w Portainer (stos "jenkins"), plik docker-compose:
+## (wcięcia w YAML wyłącznie spacjami, bez tabulatorów)
 
-  services:
-    jenkins:
-      image: jenkins/jenkins:lts
-	  privileged: true
-      user: root
-      ports:
-       - 8080:8080
-       - 50000:50000
-      container_name: jenkins
-      volumes:
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    privileged: true
+    user: root
+    ports:
+      - 8080:8080
+      - 50000:50000
+    container_name: jenkins
+    volumes:
       - /docker/jenkins:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
-	  restart: always
-	  
-	  
+    restart: always
 
-docker logs jenkins | less
 
+
+# Hasło startowe Jenkinsa (Jenkins pisze log na stderr, dlatego 2>&1 przed less):
+sudo docker logs jenkins 2>&1 | less
+
+# albo wprost z pliku:
+sudo cat /docker/jenkins/secrets/initialAdminPassword

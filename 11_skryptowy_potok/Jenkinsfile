@@ -4,7 +4,7 @@ properties([
     string(
       name: 'IP_HOSTA',
       defaultValue: '0.0.0.0',
-      description: 'Podaj adres IP hosta na który zrealizować wdrożenie strony www',
+      description: 'Podaj adres IP hosta, na którym ma zostać zrealizowane wdrożenie strony WWW.',
       trim: true
     )
   ])
@@ -27,7 +27,7 @@ node('linux-docker') {
   }
 
   stage('Pobieranie GIT') {
-    git branch: 'main', url: 'https://github.com/adminakademiagit/ansible_www.git'
+    git branch: 'main', url: 'https://github.com/jnowak/ansible_www.git'
   }
 
   stage('Budowa pliku inwentarza dla Ansible') {
@@ -43,7 +43,7 @@ all:
             docker.adminakademia.lan:
               ansible_host: ${ip}
               ansible_connection: ssh
-              ansible_ssh_user: user
+              ansible_ssh_user: kursant
 """
     echo "Utworzono inventory/serwery.yaml dla ${ip}"
   }

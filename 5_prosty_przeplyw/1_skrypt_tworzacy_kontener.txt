@@ -1,9 +1,9 @@
 #!/bin/bash
+set -e
 
 # Ponizej wpisz nazwe swojego konta dockerhub:
-konto_docker_hub="adminakademiagit"
-docker_haslo="twoje_haslo"
-
+konto_docker_hub="jnowak"
+docker_haslo='twoje_haslo'
 
 # Budowanie obrazu Docker
 echo "Budowanie obrazu Docker: moj-server-dns"

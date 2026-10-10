@@ -1,0 +1,21 @@
+all:
+  children:
+    servers:
+      children:
+        serweryweb:
+          hosts:
+            docker.adminakademia.lan:
+              ansible_host: 10.0.10.31
+              ansible_connection: ssh
+              ansible_ssh_user: kursant
+            docker2.adminakademia.lan:
+              ansible_host: 10.0.10.41
+              ansible_connection: ssh
+              ansible_ssh_user: kursant
+    local:
+      children:
+        moj_pc:
+          hosts:
+            ansiblesrv:
+              ansible_host: localhost
+              ansible_connection: local

@@ -12,7 +12,7 @@ name: pierwszy_przeplyw
 #    - cron: '*/2 * * * *'
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
     inputs:
       wybor_klienta:
         description: 'Wybierz klienta:'
@@ -28,7 +28,6 @@ on:
         required: false
         type: string
 
-
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -38,24 +37,22 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-
       - name: Sprawdzamy wersję Python
         run: python3 -V
 
-      - name: Wyswietl aktualny katalog roboczy
+      - name: Wyświetl aktualny katalog roboczy
         run: pwd
 
-      - name: Wyswietl listę plikow
+      - name: Wyświetl listę plików
         run: ls -la
-
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      - name: Wyswietl listę plikow
+      - name: Wyświetl listę plików po checkout
         run: ls -la
 
-      - name: testujemy zmienne input
+      - name: Testujemy zmienne input
         run: |
           echo "Wybrałeś klienta: $KLIENT"
           echo "Podane imię i nazwisko: ${{ inputs.nazwa_operatora }}"

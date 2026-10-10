@@ -7,25 +7,32 @@ jobs:
   testy_sekretu:
     runs-on: ubuntu-latest
     environment:
-      name: 'Testowe'
-
+      name: 'Produkcyjne'
 
     steps:
       - name: Test sekretu repozytorium
         run: echo "Sekret repozytorium to ${{ secrets.Testowy_sekret_repo }}"
-        
+
       - name: Test zmiennej repozytorium
         run: echo "Zmienna repozytorium to ${{ vars.Testowa_zmienna_repo }}"
 
-      - name: Test sekretu srodowiska
-        run: echo "Sekret srodowiska to ${{ secrets.sekret_srodowiska }}"   
-        
-      - uses: actions/checkout@v4
+      - name: Test sekretu środowiska
+        run: echo "Sekret środowiska to ${{ secrets.sekret_srodowiska }}"
+
+      - uses: actions/checkout@v7
 
       - name: Odszyfrowanie pliku
+        env:
+          HASLO_GPG: ${{ secrets.HASLO_GPG1 }}
         run: |
-          mkdir $HOME/secrets
-          gpg --quiet --batch --yes --decrypt --passphrase="${{ secrets.HASLO_GPG1 }}" --output $HOME/secrets/sekret.json sekret.json.gpg 
+          mkdir -p $HOME/secrets
+          gpg --quiet --batch --yes --decrypt --passphrase="$HASLO_GPG" --output $HOME/secrets/sekret.json sekret.json.gpg
 
-      - name: Podgląd pliku odszyfrowanego
-        run: cat $HOME/secrets/sekret.json
+      - name: Sprawdzenie pliku odszyfrowanego
+        run: |
+          echo "Klucze w pliku sekret.json:"
+          jq -r 'keys[]' $HOME/secrets/sekret.json
+
+      - name: Usunięcie pliku odszyfrowanego
+        if: always()
+        run: rm -rf $HOME/secrets

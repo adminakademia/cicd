@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Ponizej wpisz nazwe swojego konta dockerhub:
-konto_docker_hub="adminakademia"
+konto_docker_hub="jnowak"
 
 
 ###########################################################
 # Klonowanie repozytorium Git
-REPO_URL="https://github.com/adminakademia/dockerdns.git"
-REPO_NAME="dockerdns"
+REPO_URL="https://github.com/jnowak/mojdnsserver.git"
+REPO_NAME="mojdnsserver"
 
 if [ -d "$REPO_NAME" ]; then
     echo "Katalog $REPO_NAME już istnieje. Usuwam..."

@@ -1,14 +1,45 @@
-### Instalacja jenkins w Debian:
+### Instalacja Jenkins w Debian 13 (Jenkins jako usługa systemowa):
 
-https://pkg.origin.jenkins.io/debian-stable/
+https://pkg.jenkins.io/debian-stable/
+
+
+# Java 21:
+sudo apt update
+sudo apt install fontconfig openjdk-21-jre
+java -version
+
+
+# Klucz i repozytorium Jenkinsa (rok w nazwie klucza co jakiś czas się zmienia -
+# aktualny klucz jest podany na stronie pkg.jenkins.io/debian-stable):
+sudo wget -O /etc/apt/keyrings/jenkins-keyring.asc https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+echo "deb [signed-by=/etc/apt/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+cat /etc/apt/sources.list.d/jenkins.list
+
+
+# Instalacja Jenkinsa (bez "apt update" po dodaniu repozytorium apt nie zna pakietu jenkins):
+sudo apt update
+sudo apt install jenkins
+
+
+# Sprawdzenie usługi i portu:
+systemctl status jenkins --no-pager
+ss -tln | grep 8080
 
 
 # Jak by zmienić port na inny, to:
-systemctl edit jenkins 
+sudo systemctl edit jenkins
 
+# i w górnej, pustej części pliku (nad komentarzem "### Edits below this comment will be discarded") wpisujemy:
 [Service]
 Environment="JENKINS_PORT=8081"
 
+sudo systemctl restart jenkins
+ss -tln | grep 808
 
-# Hasło odczytujemy:
-cat /var/lib/jenkins/secrets/initialAdminPassword
+# Powrót do domyślnego portu 8080:
+sudo systemctl revert jenkins
+sudo systemctl restart jenkins
+
+
+# Hasło odczytujemy (plik mogą czytać tylko konto jenkins i grupa jenkins, dlatego sudo):
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword

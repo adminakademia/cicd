@@ -10,7 +10,7 @@ all:
             docker.adminakademia.lan:
               ansible_host: ${IP_HOSTA}
               ansible_connection: ssh
-              ansible_ssh_user: user
+              ansible_ssh_user: kursant
 EOF
 echo " "
 echo "Uruchamianie wdrożenia strony www"

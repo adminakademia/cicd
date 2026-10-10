@@ -16,7 +16,7 @@
       - containerd.io
       - docker-buildx-plugin
       - docker-compose-plugin
-    keyring_path: "{{ '/usr/share/keyrings/docker-archive-keyring.gpg' if ansible_distribution == 'Debian' else '/etc/apt/keyrings/docker.gpg' }}"
+    keyring_path: /etc/apt/keyrings/docker.asc
 
   tasks:
     - name: DOCKER - Sprawdź, czy docker jest zainstalowany.
@@ -31,16 +31,11 @@
         update_cache: yes
       when: (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu') and (result.rc != 0)
 
-    - name: Dodaj klucz GP Docker (Debian/Ubuntu)
-      apt_key:
+    - name: Dodaj klucz GPG Docker (Debian/Ubuntu)
+      get_url:
         url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
-        state: present
-        keyring: >-
-          {{
-            '/usr/share/keyrings/docker-archive-keyring.gpg'
-            if ansible_distribution == 'Debian'
-            else '/etc/apt/keyrings/docker.gpg'
-          }}
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
       when: (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu') and (result.rc != 0)
 
     - name: Dodaj repozytorium Docker (Debian/Ubuntu)
@@ -89,14 +84,14 @@
         image: nginx
         state: started
         recreate: true
+        restart_policy: unless-stopped
         ports:
         - '80:80'
         volumes:
-        - "/home/user/www-example:/usr/share/nginx/html"
+        - "/home/kursant/www-example:/usr/share/nginx/html"
 
     - name: Kopiowanie katalogu z witryną www
       copy:
         src: strona/
-        dest: /home/user/www-example/
+        dest: /home/kursant/www-example/
         force: yes
-

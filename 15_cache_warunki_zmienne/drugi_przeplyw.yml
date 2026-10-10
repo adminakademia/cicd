@@ -6,26 +6,27 @@ on:
 jobs:
   testy_warunku:
     runs-on: ubuntu-latest
+    outputs:
+      jadro: ${{ steps.jadro_kroku.outputs.KERNEL }}
     steps:
-      - name: Wyswietl podstawowe informacje
+      - name: Wyświetl podstawowe informacje
         run: |
-          echo "Uruchomiono przeplyw GitHub Actions"
+          echo "Uruchomiono przepływ GitHub Actions"
           echo "Aktualna data: $(date)"
 
-      - name: Pobierz wersje jadra
+      - name: Pobierz wersję jądra
         id: jadro_kroku
         run: |
           KERNEL=$(uname -r)
           echo "KERNEL=$KERNEL" >> $GITHUB_OUTPUT
 
-      - name: Wyswietl informacje jesli jadro jest 6.x
+      - name: Wyświetl informację, jeśli jądro jest 6.x
         if: startsWith(steps.jadro_kroku.outputs.KERNEL, '6.')
-        run: echo "Wykryto jadro 6.x - warunek zostal spelniony, i zadanie zostalo wykonane!"
+        run: echo "Wykryto jądro 6.x - warunek został spełniony, i zadanie zostało wykonane!"
 
-      - name: Inny komunikat dla innego jadra
+      - name: Inny komunikat dla innego jądra
         if: ${{ !startsWith(steps.jadro_kroku.outputs.KERNEL, '6.') }}
-        run: echo "Wykryto jadro inne niz 6.x — to zadanie zostalo wykonane zamiast poprzedniego."
-
+        run: echo "Wykryto jądro inne niż 6.x — to zadanie zostało wykonane zamiast poprzedniego."
 
       - name: Uruchom zawsze
         if: always()
@@ -33,12 +34,11 @@ jobs:
 
       - name: Uruchom po awarii
         if: failure()
-        run: echo "Zawsze"
-        
+        run: echo "Po awarii"
+
       - name: Uruchom po sukcesie
         if: success()
-        run: echo "Zawsze"
-
+        run: echo "Po sukcesie"
 
   drugie_zadanie:
     runs-on: ubuntu-latest
@@ -46,4 +46,9 @@ jobs:
     if: failure()
     steps:
       - name: Drugie zadanie
-        run: echo "Drugie zadanie wykonane"		
+        run: echo "Drugie zadanie wykonane"
+
+      - name: Wyświetl jądro z zadania testy_warunku
+        run: echo "Jądro w zadaniu testy_warunku to $JADRO_TESTY"
+        env:
+          JADRO_TESTY: ${{ needs.testy_warunku.outputs.jadro }}

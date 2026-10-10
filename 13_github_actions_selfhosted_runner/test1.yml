@@ -1,42 +1,32 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Moj pierwszy przeplyw
+name: pierwszy_przeplyw
 
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
 
-
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
   moje_pierwsze_zadanie:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: debian13_runner1
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-
       - name: Sprawdzamy wersję Python
-        run: python -V
+        run: python3 -V
 
-      - name: Wyswietl aktualny katalog roboczy
+      - name: Wyświetl aktualny katalog roboczy
         run: pwd
 
-      - name: Wyswietl listę plikow
-        run: ls -a
-        
+      - name: Wyświetl listę plików
+        run: ls -la
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      - name: Wyswietl listę plikow
-        run: ls -a
-
-      - name: Setup Python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: '3.13.7'
-    
-      - name: Sprawdzamy wersję Python
-        run: python -V       
+      - name: Wyświetl listę plików po checkout
+        run: ls -la

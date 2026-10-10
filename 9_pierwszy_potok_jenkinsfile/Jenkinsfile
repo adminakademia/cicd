@@ -1,0 +1,16 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Budowa DNS') {
+            steps {
+                git branch: 'main', url: 'https://github.com/adminakademiagit/jenkinszadanie1.git'
+            }
+        }
+        stage('Wdrożenie DNS') {
+            steps {
+                echo 'Wdrażam kontener DNS'
+            }
+        }
+    }
+}

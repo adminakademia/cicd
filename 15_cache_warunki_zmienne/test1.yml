@@ -12,7 +12,7 @@ name: pierwszy_przeplyw
 #    - cron: '*/2 * * * *'
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
     inputs:
       wybor_klienta:
         description: 'Wybierz klienta:'
@@ -28,7 +28,6 @@ on:
         required: false
         type: string
 
-
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -37,80 +36,74 @@ jobs:
 #    runs-on: debian13_runner1
     runs-on: ubuntu-latest
 
-        # Zmienne środowiskowe dla kroków w jobie
-#    env:
-#      NFT_URL: https://www.netfilter.org/projects/nftables/files/nftables-1.0.6.1.tar.xz
-#      NFT_DIR: downloads
-#      NFT_FILE: nftables-1.0.6.1.tar.xz
-#      NFT_KEY_FILE: downloads/nftables.url
-
+    # # Zmienne środowiskowe dla kroków w jobie
+    # env:
+    #   NFT_URL: https://www.netfilter.org/projects/nftables/files/nftables-1.0.6.1.tar.xz
+    #   NFT_DIR: downloads
+    #   NFT_FILE: nftables-1.0.6.1.tar.xz
+    #   NFT_KEY_FILE: downloads/nftables.url
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-
       - name: Sprawdzamy wersję Python
         run: python3 -V
 
-      - name: Wyswietl aktualny katalog roboczy
+      - name: Wyświetl aktualny katalog roboczy
         run: pwd
 
-      - name: Wyswietl listę plikow
+      - name: Wyświetl listę plików
         run: ls -la
-
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-#   # --- CACHE NFTABLES ---
-#      # Tworzymy katalog na pliki i zapisujemy URL do pliku,
-#      # który posłuży jako "materiał do hashowania" dla klucza cache.
-#      - name: Przygotuj katalog i plik z URL do klucza cache
-#        run: |
-#          mkdir -p "$NFT_DIR"
-#          echo "$NFT_URL" > "$NFT_KEY_FILE"
-#          echo "Klucz cache będzie bazował na zawartości: $NFT_KEY_FILE"
+      # # --- CACHE NFTABLES ---
+      # # Tworzymy katalog na pliki i zapisujemy URL do pliku,
+      # # który posłuży jako "materiał do hashowania" dla klucza cache.
+      # - name: Przygotuj katalog i plik z URL do klucza cache
+      #   run: |
+      #     mkdir -p "$NFT_DIR"
+      #     echo "$NFT_URL" > "$NFT_KEY_FILE"
+      #     echo "Klucz cache będzie bazował na zawartości: $NFT_KEY_FILE"
 
-#      # Przywrócenie/zapis cache dla pliku .tar.xz
-#      # Gdy URL się zmieni, zmieni się hash pliku z URL, więc utworzy się nowy cache.
-#      - name: Przywróć/zapisz cache dla nftables
-#        id: cache-nft
-#        uses: actions/cache@v4
-#        with:
-#          path: ${{ env.NFT_DIR }}/nftables-1.0.6.1.tar.xz
-#          key: nftables-${{ runner.os }}-${{ hashFiles(env.NFT_KEY_FILE) }}
-#          # Możesz dodać restore-keys, jeśli chcesz fallback do starszych wersji:
-#          # restore-keys: |
-#          #   nftables-${{ runner.os }}-
+      # # Przywrócenie/zapis cache dla pliku .tar.xz
+      # # Gdy URL się zmieni, zmieni się hash pliku z URL, więc utworzy się nowy cache.
+      # - name: Przywróć/zapisz cache dla nftables
+      #   id: cache-nft
+      #   uses: actions/cache@v6
+      #   with:
+      #     path: ${{ env.NFT_DIR }}/nftables-1.0.6.1.tar.xz
+      #     key: nftables-${{ runner.os }}-${{ hashFiles(env.NFT_KEY_FILE) }}
+      #     # Możesz dodać restore-keys, jeśli chcesz fallback do starszych wersji:
+      #     # restore-keys: |
+      #     #   nftables-${{ runner.os }}-
 
-#      # Pobranie pliku tylko, jeśli nie było trafienia w cache.
-#      - name: Pobierz nftables (jeśli brak w cache)
-#        if: steps.cache-nft.outputs.cache-hit != 'true'
-#        run: |
-#          echo "Brak trafienia w cache — pobieram z: $NFT_URL"
-#          curl -fL "$NFT_URL" -o "$NFT_DIR/$NFT_FILE"
-#          ls -lh "$NFT_DIR"
+      # # Pobranie pliku tylko, jeśli nie było trafienia w cache.
+      # - name: Pobierz nftables (jeśli brak w cache)
+      #   if: steps.cache-nft.outputs.cache-hit != 'true'
+      #   run: |
+      #     echo "Brak trafienia w cache — pobieram z: $NFT_URL"
+      #     curl -fL "$NFT_URL" -o "$NFT_DIR/$NFT_FILE"
+      #     ls -lh "$NFT_DIR"
 
-
-      - name: Tworzenie zmiennej z wersją jadra systemu operacyjnego
+      - name: Tworzenie zmiennej z wersją jądra systemu operacyjnego
         id: zmienna_jadro
         run: |
-         JADRO=$(uname -a)
-          echo "Jadro w systemie to $JADRO"
+          JADRO=$(uname -a)
+          echo "Jądro w systemie to $JADRO"
           echo "JADRO<<EOF" >> $GITHUB_OUTPUT
           echo "$JADRO" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Wyswietl zawartosc zmiennej jadro
-        run: echo "Jadro w systemie to $wersja_jadro"
+      - name: Wyświetl zawartość zmiennej jądro
+        run: echo "Jądro w systemie to $wersja_jadro"
         env:
           wersja_jadro: ${{ steps.zmienna_jadro.outputs.JADRO }}
 
-
-
-      - name: Wyswietl listę plikow
+      - name: Wyświetl listę plików po checkout
         run: ls -la
 
-      - name: testujemy zmienne input
+      - name: Testujemy zmienne input
         run: |
           echo "Wybrałeś klienta: $KLIENT"
           echo "Podane imię i nazwisko: ${{ inputs.nazwa_operatora }}"

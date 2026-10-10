@@ -1,2 +1,2 @@
-docker run --pull always adminakademiagit/moj-server-dns:latest /bin/bash -c "named-checkconf /etc/bind/named.conf"
-docker run --pull always adminakademiagit/moj-server-dns:latest /bin/bash -c "named-checkzone adminakademia.lan /etc/bind/db.adminakademia.lan"
+docker run --rm --pull always jnowak/moj-server-dns:latest /bin/bash -c "named-checkconf /etc/bind/named.conf"
+docker run --rm --pull always jnowak/moj-server-dns:latest /bin/bash -c "named-checkzone adminakademia.lan /etc/bind/db.adminakademia.lan"
