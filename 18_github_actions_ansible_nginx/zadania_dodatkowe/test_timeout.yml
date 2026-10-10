@@ -1,0 +1,16 @@
+name: Test limitu czasu
+
+on:
+  workflow_dispatch:
+
+jobs:
+  zbyt_dlugie_zadanie:
+    runs-on: moj_ansible
+    timeout-minutes: 1
+
+    steps:
+      - name: Krok dluzszy niz limit
+        run: |
+          echo "Start: $(date +%T)"
+          sleep 90
+          echo "Ten napis sie nie pojawi"

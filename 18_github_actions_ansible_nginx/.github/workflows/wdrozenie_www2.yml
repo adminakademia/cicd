@@ -9,9 +9,9 @@ on:
         default: '0.0.0.0'
       # Wskazanie konta użytkownika na bazie którego ma być realizowane połączenie SSH z hostem w ramach ansible:
       SSH_USER:
-        description: 'Użytkownik SSH do połączenia z hostem (domyślnie: user)'
+        description: 'Użytkownik SSH do połączenia z hostem (domyślnie: kursant)'
         required: false
-        default: 'user'
+        default: 'kursant'
 
 concurrency:
   # zapobiega kilku równoległym wdrożeniom na ten sam adres IP
@@ -31,7 +31,7 @@ jobs:
     runs-on: moj_ansible
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Sprawdzenie czy zainstalowane ansible-lint
         id: check_lint
@@ -59,12 +59,12 @@ jobs:
   # =========================
   #     ZADANIE: DEPLOY
   # =========================
-  
+
   deploy:
     # dodajemy weryfikację, aby to zadanie zostało wykonane tylko wtedy, gdy poprzednie zakończy się sukcesem:
-    needs: lint 
+    needs: lint
     runs-on: moj_ansible
-    # POniżej zabezpieczenie przed wiszącym deployem (np. zawieszony SSH). 
+    # Poniżej zabezpieczenie przed wiszącym deployem (np. zawieszony SSH).
     # Po 30 minutach zadanie padnie – lepsze to niż nieskończone „running”.
     timeout-minutes: 30
     environment: production
@@ -75,7 +75,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Walidacja adresu IP
         run: |
@@ -144,7 +144,7 @@ jobs:
                         ansible_host: ${IP_HOSTA}
                         ansible_connection: ssh
                         ansible_ssh_user: ${SSH_USER}
-                        ansible_python_interpreter: /usr/bin/python3.13
+                        ansible_python_interpreter: /usr/bin/python3
           EOF
           echo "Plik inventory/serwery.yaml:"
           cat ./inventory/serwery.yaml

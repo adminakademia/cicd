@@ -1,0 +1,5 @@
+      # Zadanie dodatkowe: sprawdzenie strony po wdrożeniu (jak w lekcji 11)
+      - name: Test strony po wdrożeniu
+        run: |
+          curl -fsS -o /dev/null -w "Strona główna: HTTP %{http_code}\n" --retry 5 --retry-delay 2 --retry-all-errors "http://${IP_HOSTA}/"
+          curl -fsS --retry 5 --retry-delay 2 --retry-all-errors "http://${IP_HOSTA}/health"

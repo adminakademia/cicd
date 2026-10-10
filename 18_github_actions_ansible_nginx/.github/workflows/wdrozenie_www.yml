@@ -10,8 +10,6 @@ on:
 
 jobs:
   deploy:
-    # Jeśli masz self-hosted runnera o labelu "linux-docker", możesz użyć:
-    # runs-on: [self-hosted, linux-docker]
     runs-on: moj_ansible
 
     env:
@@ -19,9 +17,9 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      # (opcjonalnie) instalacja Ansible na runnerze GitHub, jeśli nie jest dostępny
+      # Instalacja Ansible na naszym runnerze self-hosted
       - name: Instalacja Ansible
         run: |
           sudo apt-get update
@@ -41,7 +39,7 @@ jobs:
                       docker.adminakademia.lan:
                         ansible_host: ${IP_HOSTA}
                         ansible_connection: ssh
-                        ansible_ssh_user: user
+                        ansible_ssh_user: kursant
           EOF
           echo ""
           echo "Uruchamianie wdrożenia strony www"

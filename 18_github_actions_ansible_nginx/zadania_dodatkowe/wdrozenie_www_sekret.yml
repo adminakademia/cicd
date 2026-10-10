@@ -1,0 +1,57 @@
+name: Wdrożenie strony www z kluczem z sekretu
+
+on:
+  workflow_dispatch:
+    inputs:
+      IP_HOSTA:
+        description: 'Podaj adres IP hosta na który zrealizować wdrożenie strony www'
+        required: true
+        default: '0.0.0.0'
+
+jobs:
+  deploy:
+    runs-on: moj_ansible
+
+    env:
+      IP_HOSTA: ${{ github.event.inputs.IP_HOSTA }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v7
+
+      # Klucz prywatny z sekretu trafia do pliku w katalogu tymczasowym runnera
+      - name: Zapis klucza SSH z sekretu
+        env:
+          SSH_KLUCZ: ${{ secrets.SSH_KLUCZ_PRYWATNY }}
+        run: |
+          install -m 600 /dev/null "$RUNNER_TEMP/klucz_ssh"
+          printf '%s\n' "$SSH_KLUCZ" > "$RUNNER_TEMP/klucz_ssh"
+
+      - name: Budowa pliku inwentarza dla Ansible
+        run: |
+          mkdir -p ./inventory
+          cat << EOF > ./inventory/serwery.yaml
+          all:
+            children:
+              servers:
+                children:
+                  serweryweb:
+                    hosts:
+                      docker.adminakademia.lan:
+                        ansible_host: ${IP_HOSTA}
+                        ansible_connection: ssh
+                        ansible_ssh_user: kursant
+                        ansible_python_interpreter: /usr/bin/python3
+                        ansible_ssh_private_key_file: ${RUNNER_TEMP}/klucz_ssh
+                        ansible_ssh_common_args: '-o IdentitiesOnly=yes'
+          EOF
+
+      - name: Uruchomienie scenariusza Ansible
+        run: |
+          ansible-playbook -i ./inventory/serwery.yaml instalacja_dockernginx_strona.yaml
+
+      # Klucz usuwamy zawsze – także wtedy, gdy wcześniejszy krok się nie powiedzie
+      - name: Usunięcie klucza SSH
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/klucz_ssh"
