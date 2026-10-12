@@ -1,0 +1,9 @@
+zadanie-a:
+  image: ubuntu:24.04
+  script:
+    - KOLOR="niebieski"
+    - cd /tmp
+    - echo "W script KOLOR=$KOLOR, katalog $(pwd)"
+    - exit 1
+  after_script:
+    - echo "W after_script KOLOR=$KOLOR, katalog $(pwd)"

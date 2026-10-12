@@ -1,0 +1,15 @@
+default:
+  image: ubuntu:24.04
+  before_script:
+    - echo "To jest wykonywane w każdym zadaniu przed akcjami w tym zadaniu."
+
+zadanie-b1:
+  script:
+    - echo "Zadanie b1"
+
+zadanie-b2:
+  inherit:
+    default: false
+  image: ubuntu:24.04
+  script:
+    - echo "Zadanie b2"

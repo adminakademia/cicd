@@ -1,0 +1,17 @@
+wdrozenie:
+  image: alpine
+  stage: deploy
+  script:
+    - echo "Etap deploy"
+
+testowanie:
+  image: alpine
+  stage: test
+  script:
+    - echo "Etap test"
+
+budowanie:
+  image: alpine
+  stage: build
+  script:
+    - echo "Etap build"

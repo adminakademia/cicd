@@ -1,0 +1,7 @@
+b_kontener:
+  tags:
+    - firmakontener
+  script:
+    - echo "Wykonane na $(hostname)"
+    - head -2 /etc/os-release
+    - sleep 20

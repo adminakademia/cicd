@@ -1,0 +1,25 @@
+spec:
+  inputs:
+    wybor_klienta:
+      description: "Nasz Klient"
+      options: ["Contoso", "Arcacorp", "Nwtraders"]
+      default: "Contoso"
+    nazwa_operatora:
+      description: "Twoje imię i nazwisko"
+      default: ""
+
+---
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - when: never
+
+testujemy-input:
+  image: ubuntu:24.04
+  stage: build
+  variables:
+    Operator: $[[ inputs.nazwa_operatora ]]
+  script: |
+    echo "Przez zmienna: $Operator"
+    echo "Wprost: $[[ inputs.nazwa_operatora ]]"

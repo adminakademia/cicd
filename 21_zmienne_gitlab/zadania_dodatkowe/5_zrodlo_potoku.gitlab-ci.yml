@@ -1,0 +1,4 @@
+skad-potok:
+  image: ubuntu:24.04
+  script:
+    - echo "Ten potok uruchomilo zrodlo $CI_PIPELINE_SOURCE"

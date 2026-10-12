@@ -1,0 +1,5 @@
+zadanie-c:
+  image: ubuntu:24.04
+  stage: przygotowanie
+  script:
+    - echo "Zadanie c"

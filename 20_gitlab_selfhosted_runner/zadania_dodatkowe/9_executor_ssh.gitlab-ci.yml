@@ -1,0 +1,7 @@
+zadanie_ssh:
+  tags:
+    - firmassh
+  script:
+    - hostname
+    - whoami
+    - pwd

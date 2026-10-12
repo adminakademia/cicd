@@ -1,0 +1,10 @@
+budowanie:
+  image: ubuntu:24.04
+  stage: build
+  script:
+    - echo "Etap build"
+
+bez-etapu:
+  image: ubuntu:24.04
+  script:
+    - echo "Zadanie bez stage"

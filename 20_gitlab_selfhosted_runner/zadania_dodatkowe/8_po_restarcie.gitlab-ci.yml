@@ -1,0 +1,6 @@
+po_restarcie:
+  tags:
+    - firma
+  script:
+    - uptime
+    - hostname

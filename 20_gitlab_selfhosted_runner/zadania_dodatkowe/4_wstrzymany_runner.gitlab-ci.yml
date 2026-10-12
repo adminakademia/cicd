@@ -1,0 +1,6 @@
+d_wstrzymany:
+  tags:
+    - firmadocker
+  script:
+    - echo "Wykonane na $(hostname)"
+    - sleep 20

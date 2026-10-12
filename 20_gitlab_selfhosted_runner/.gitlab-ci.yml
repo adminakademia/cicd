@@ -1,0 +1,26 @@
+stages:
+  - zadanie1
+  - zadanie2
+
+zadanie1:
+  tags:
+    - firmadocker
+  stage: zadanie1
+  script:
+    - echo "Testowanie GitLab CI/CD"
+    - ls -la
+    - mkdir mojezadania
+    - cd mojezadania
+    - echo "Testujemy GitLab CI/CD" > mojplik.txt
+    - cat mojplik.txt
+    - uname -a
+  artifacts:
+    paths:
+      - mojezadania/
+
+zadanie2:
+  image: alpine
+  stage: zadanie2
+  script:
+    - test -f mojezadania/mojplik.txt
+    - grep "GitLab" mojezadania/mojplik.txt

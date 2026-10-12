@@ -1,0 +1,12 @@
+dwa_znaczniki:
+  tags:
+    - firma
+    - firmadocker
+  script:
+    - echo "Ten napis sie nie pojawi"
+
+literowka:
+  tags:
+    - firmadoker
+  script:
+    - echo "Ten napis sie nie pojawi"

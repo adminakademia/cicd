@@ -24,7 +24,7 @@ zadanie2:
   stage: build
   script:
     - test -f mojezadania/mojplik.txt
-    - grep "GitLab" mojezadania/mojplik.txt	
+    - grep "GitLab" mojezadania/mojplik.txt
 
 zadanie3:
   image: ubuntu:24.04

@@ -1,0 +1,4 @@
+zadanie-k:
+  image: ubuntu:24.04
+  script:
+    - 'echo "Wynik: OK"'

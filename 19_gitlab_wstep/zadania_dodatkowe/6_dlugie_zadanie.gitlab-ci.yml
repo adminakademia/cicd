@@ -1,0 +1,6 @@
+dlugie_zadanie:
+  image: alpine
+  script:
+    - echo "Start $(date +%T)"
+    - sleep 300
+    - echo "Ten napis sie nie pojawi"

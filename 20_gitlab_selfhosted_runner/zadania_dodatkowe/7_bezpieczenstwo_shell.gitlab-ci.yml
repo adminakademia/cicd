@@ -1,0 +1,10 @@
+bezpieczenstwo:
+  tags:
+    - firma
+  script:
+    - whoami
+    - id
+    - pwd
+    - sudo -n true || echo "Brak sudo"
+    - ls /home/kursant || echo "Brak dostepu"
+    - ls /etc/gitlab-runner || echo "Brak dostepu"

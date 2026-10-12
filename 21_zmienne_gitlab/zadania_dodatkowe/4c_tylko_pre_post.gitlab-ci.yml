@@ -1,0 +1,11 @@
+zadanie-pre:
+  image: ubuntu:24.04
+  stage: .pre
+  script:
+    - echo "Tylko pre"
+
+zadanie-post:
+  image: ubuntu:24.04
+  stage: .post
+  script:
+    - echo "Tylko post"

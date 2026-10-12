@@ -1,0 +1,13 @@
+obraz_docker:
+  tags:
+    - firmadocker
+  image: alpine
+  script:
+    - head -2 /etc/os-release
+
+obraz_shell:
+  tags:
+    - firma
+  image: alpine
+  script:
+    - head -2 /etc/os-release

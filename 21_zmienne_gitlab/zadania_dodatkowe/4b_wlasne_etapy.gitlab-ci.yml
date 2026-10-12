@@ -1,0 +1,9 @@
+stages:
+  - przygotowanie
+  - sprawdzenie
+
+zadanie-c:
+  image: ubuntu:24.04
+  stage: build
+  script:
+    - echo "Zadanie c"
