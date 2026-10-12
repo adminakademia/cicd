@@ -1,0 +1,6 @@
+sprawdz-zmienne:
+  image: ubuntu:24.04
+  script:
+    - echo "Gałąź $CI_COMMIT_REF_NAME, chroniona = $CI_COMMIT_REF_PROTECTED"
+    - echo "Zmienna repozytorium to $Testowa_zmienna_repo"
+    - echo "Sekret repozytorium to $Testowy_sekret_repo"

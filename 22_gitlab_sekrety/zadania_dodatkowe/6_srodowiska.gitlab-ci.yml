@@ -1,0 +1,13 @@
+sekret-testowe:
+  image: ubuntu:24.04
+  environment:
+    name: Testowe
+  script:
+    - echo "Sekret środowiska to $sekret_srodowiska"
+
+sekret-literowka:
+  image: ubuntu:24.04
+  environment:
+    name: Produkcja
+  script:
+    - echo "Sekret środowiska to $sekret_srodowiska"

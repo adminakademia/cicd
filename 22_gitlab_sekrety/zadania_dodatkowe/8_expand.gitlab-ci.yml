@@ -1,0 +1,4 @@
+adres-api:
+  image: ubuntu:24.04
+  script:
+    - echo "Adres API to $URL_API"

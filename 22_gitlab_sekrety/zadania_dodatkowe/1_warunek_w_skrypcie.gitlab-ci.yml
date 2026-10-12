@@ -1,0 +1,22 @@
+testujemy-input:
+  image: ubuntu:24.04
+  stage: build
+  script:
+    - JADRO=$(uname -r)
+    - echo "JADRO=$JADRO" > build.env
+  artifacts:
+    reports:
+      dotenv: build.env
+
+sprawdz_jadro:
+  image: ubuntu:24.04
+  stage: test
+  needs:
+    - testujemy-input
+  script:
+    - echo "Jadro w systemie to $JADRO"
+    - |
+      case "$JADRO" in
+        6.*) echo "Wykryto jądro 6.x" ;;
+        *)   echo "Wykryto jądro inne niż 6.x" ;;
+      esac

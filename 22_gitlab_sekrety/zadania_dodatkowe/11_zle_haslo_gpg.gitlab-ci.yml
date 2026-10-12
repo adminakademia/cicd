@@ -1,0 +1,12 @@
+odszyfrowanie_gpg:
+  image: ubuntu:24.04
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq gnupg
+  script:
+    - mkdir -p $HOME/secrets
+    - gpg --quiet --batch --yes --decrypt --passphrase="$HASLO_GPG" --output $HOME/secrets/sekret.json sekret.json.gpg
+    - echo "Plik został odszyfrowany"
+  after_script:
+    - echo "Sprzątanie po zadaniu"
+    - rm -rf $HOME/secrets

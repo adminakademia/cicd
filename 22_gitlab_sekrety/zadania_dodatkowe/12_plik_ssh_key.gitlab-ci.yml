@@ -1,0 +1,9 @@
+plik-ssh-key:
+  image: ubuntu:24.04
+  script:
+    - echo "$SSH_KEY"
+    - ls -l "$SSH_KEY"
+    - wc -l "$SSH_KEY"
+    - head -n 1 "$SSH_KEY"
+    - chmod 600 "$SSH_KEY"
+    - ls -l "$SSH_KEY"

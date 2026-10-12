@@ -1,0 +1,19 @@
+testujemy-input:
+  image: ubuntu:24.04
+  stage: build
+  script:
+    - JADRO=$(uname -r)
+    - echo "JADRO=$JADRO" > build.env
+  artifacts:
+    reports:
+      dotenv: build.env
+
+sprawdz-jadro:
+  stage: test
+  needs:
+    - testujemy-input
+  variables:
+    JADRO: $JADRO
+  trigger:
+    include: jadro-potomny.yml
+    strategy: depend

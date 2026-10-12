@@ -1,0 +1,43 @@
+przygotowanie:
+  image: ubuntu:24.04
+  stage: build
+  script:
+    - echo "Przygotowanie"
+
+testy_warunku:
+  image: ubuntu:24.04
+  stage: test
+  script:
+    - exit 1
+
+po_awarii_z_needs:
+  image: ubuntu:24.04
+  stage: deploy
+  needs:
+    - przygotowanie
+  script:
+    - echo "Po awarii (needs = przygotowanie)"
+  when: on_failure
+
+po_awarii_bez_needs:
+  image: ubuntu:24.04
+  stage: deploy
+  script:
+    - echo "Po awarii (bez needs)"
+  when: on_failure
+
+po_sukcesie_z_needs:
+  image: ubuntu:24.04
+  stage: deploy
+  needs:
+    - przygotowanie
+  script:
+    - echo "Po sukcesie (needs = przygotowanie)"
+  when: on_success
+
+po_sukcesie_bez_needs:
+  image: ubuntu:24.04
+  stage: deploy
+  script:
+    - echo "Po sukcesie (bez needs)"
+  when: on_success

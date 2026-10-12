@@ -1,0 +1,9 @@
+pobierz-pliki:
+  image: ubuntu:24.04
+  variables:
+    SECURE_FILES_DOWNLOAD_PATH: "./pliki/"
+  script:
+    - apt-get update -qq
+    - apt-get install -y -qq curl
+    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
+    - ls -l pliki/

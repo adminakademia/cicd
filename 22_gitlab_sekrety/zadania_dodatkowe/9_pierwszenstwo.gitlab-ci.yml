@@ -1,0 +1,8 @@
+pierwszenstwo:
+  image: ubuntu:24.04
+  variables:
+    Testowa_zmienna_repo: "wartosc z pliku"
+    Zmienna_z_pliku: "tylko w pliku"
+  script:
+    - echo "Zmienna repozytorium to $Testowa_zmienna_repo"
+    - echo "Zmienna z pliku to $Zmienna_z_pliku"

@@ -1,0 +1,13 @@
+jadro-6x:
+  image: ubuntu:24.04
+  script:
+    - echo "Wykryto jądro 6.x ($JADRO)"
+  rules:
+    - if: '$JADRO =~ /^6\./'
+
+jadro-inne:
+  image: ubuntu:24.04
+  script:
+    - echo "Wykryto jądro inne niż 6.x ($JADRO)"
+  rules:
+    - if: '$JADRO !~ /^6\./'

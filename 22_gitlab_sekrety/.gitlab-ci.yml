@@ -52,13 +52,12 @@ sprawdz_jadro_inne:
   rules:
     - if: '$JADRO !~ /^6\./'
 
-
 testy_warunku:
   stage: test
   image: ubuntu:24.04
   script:
     - echo "Pierwsze zadanie"
-    - exit 1  # lub exit 1 aby symulować błąd
+    - exit 1  # exit 0 = sukces, exit 1 = błąd
 
 drugie_zadanie_zawsze:
   stage: deploy
@@ -78,7 +77,6 @@ drugie_zadanie_po_awarii:
     - echo "Drugie zadanie wykonane po awarii"
   when: on_failure
 
-
 uruchom_po_sukcesie:
   stage: deploy
   image: ubuntu:24.04
@@ -87,7 +85,6 @@ uruchom_po_sukcesie:
   script:
     - echo "Po sukcesie"
   when: on_success
-
 
 testowanie_sekretu:
   stage: deploy
@@ -101,19 +98,19 @@ testowanie_sekretu:
     - echo "Sekret środowiska to $sekret_srodowiska"
   when: always
 
-
 odszyfrowanie_gpg:
   stage: deploy
   image: ubuntu:24.04
   before_script:
     - apt-get update -qq
-    - apt-get install -y -qq gnupg
+    - apt-get install -y -qq gnupg jq
   script:
     - mkdir -p $HOME/secrets
     - gpg --quiet --batch --yes --decrypt --passphrase="$HASLO_GPG1" --output $HOME/secrets/sekret.json sekret.json.gpg
     - echo "Plik został odszyfrowany"
-    - cat $HOME/secrets/sekret.json
+    - echo "Klucze w pliku sekret.json:"
+    - jq -r 'keys[]' $HOME/secrets/sekret.json
     - echo "$SSH_KEY"
+  after_script:
+    - rm -rf $HOME/secrets
   when: always
-
-

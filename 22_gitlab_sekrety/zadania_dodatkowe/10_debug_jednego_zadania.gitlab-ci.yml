@@ -1,0 +1,11 @@
+bez-debugowania:
+  image: ubuntu:24.04
+  script:
+    - echo "Zmienna repozytorium to $Testowa_zmienna_repo"
+
+z-debugowaniem:
+  image: ubuntu:24.04
+  variables:
+    CI_DEBUG_TRACE: "true"
+  script:
+    - echo "Zmienna repozytorium to $Testowa_zmienna_repo"
