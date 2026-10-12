@@ -1,0 +1,8 @@
+services:
+  dns:
+    image: ${Login_Docker_Hub}/moj-server-dns:${OBRAZ_TAG:-latest}
+    container_name: moj-server-dns:latest
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    restart: unless-stopped
