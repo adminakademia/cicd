@@ -42,7 +42,7 @@ zadanie1_oczekiwanie:
 zadanie2:
   image: alpine
   stage: test
-  dependencies: 
+  dependencies:
     - zadanie1
   needs:
     - zadanie1
@@ -54,7 +54,7 @@ zadanie2:
 zadanie2bis:
   image: alpine
   stage: test
-  dependencies: 
+  dependencies:
     - zadanie1bis
   script:
     - ls mojezadania/

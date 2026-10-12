@@ -1,0 +1,17 @@
+stages:
+  - test
+
+pobierz_nftables:
+  image: alpine
+  stage: test
+  cache:
+    key: nftables-$CI_COMMIT_REF_SLUG
+    fallback_keys:
+      - nftables-1.0.6.1
+    paths:
+      - nftables/
+  script:
+    - mkdir -p nftables
+    - cd nftables/
+    - '[ -f nftables-1.0.6.1.tar.xz ] && echo "Plik jest w cache - nie pobieram" || wget https://www.netfilter.org/projects/nftables/files/nftables-1.0.6.1.tar.xz'
+    - ls -la

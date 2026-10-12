@@ -1,0 +1,26 @@
+stages:
+  - test
+  - deploy
+
+test_obrazow:
+  stage: test
+  image: python:${PYTHON_VERSION}-${SYSTEM}
+  parallel:
+    matrix:
+      - PYTHON_VERSION: ['3.12', '3.13', '3.14']
+        SYSTEM: ['alpine', 'slim']
+  script:
+    - python --version
+    - head -2 /etc/os-release
+
+po_wersji_314:
+  stage: deploy
+  image: alpine
+  needs:
+    - job: test_obrazow
+      parallel:
+        matrix:
+          - PYTHON_VERSION: '3.14'
+            SYSTEM: 'alpine'
+  script:
+    - echo "Wariant 3.14 na alpine zakończony - ruszam bez czekania na pozostałe"

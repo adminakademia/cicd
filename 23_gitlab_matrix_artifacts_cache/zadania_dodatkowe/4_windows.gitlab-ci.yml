@@ -1,0 +1,11 @@
+stages:
+  - test
+
+windows:
+  stage: test
+  tags:
+    - saas-windows-medium-amd64
+  script:
+    - $PSVersionTable.PSVersion
+    - (Get-CimInstance Win32_OperatingSystem).Caption
+    - python --version

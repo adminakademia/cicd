@@ -1,0 +1,31 @@
+stages:
+  - test
+
+pobierz_nftables:
+  image: alpine
+  stage: test
+  cache:
+    key:
+      files:
+        - wersja_nftables.txt
+    paths:
+      - nftables/
+  script:
+    - WERSJA=$(cat wersja_nftables.txt)
+    - echo "Wersja nftables z pliku - $WERSJA"
+    - mkdir -p nftables
+    - cd nftables/
+    - '[ -f nftables-$WERSJA.tar.xz ] && echo "Plik jest w cache - nie pobieram" || wget https://www.netfilter.org/projects/nftables/files/nftables-$WERSJA.tar.xz'
+    - ls -la
+
+bez_pliku:
+  image: alpine
+  stage: test
+  cache:
+    key:
+      files:
+        - brak.txt
+    paths:
+      - pusty/
+  script:
+    - echo "Pliku brak.txt nie ma w repozytorium"

@@ -1,0 +1,17 @@
+stages:
+  - build
+
+raport:
+  image: alpine
+  stage: build
+  script:
+    - mkdir raporty
+    - echo "Raport z potoku $CI_PIPELINE_ID" > raporty/raport.txt
+    - exit 1
+  allow_failure: true
+  artifacts:
+    name: "raport-$CI_COMMIT_SHORT_SHA"
+    when: always
+    expire_in: 1 hour
+    paths:
+      - raporty/

@@ -1,0 +1,13 @@
+stages:
+  - test
+
+test_obrazow:
+  stage: test
+  image: python:${PYTHON_VERSION}-${SYSTEM}
+  parallel:
+    matrix:
+      - PYTHON_VERSION: ['3.12', '3.13', '3.14']
+        SYSTEM: ['alpine', 'slim']
+  script:
+    - python --version
+    - head -2 /etc/os-release

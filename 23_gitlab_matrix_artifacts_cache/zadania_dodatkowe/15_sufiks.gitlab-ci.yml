@@ -1,0 +1,25 @@
+stages:
+  - test
+
+sufiks_domyslny:
+  image: alpine
+  stage: test
+  cache:
+    key: proba-sufiks
+    paths:
+      - katalog/
+  script:
+    - mkdir -p katalog
+    - echo "test" > katalog/plik.txt
+
+bez_ochrony:
+  image: alpine
+  stage: test
+  cache:
+    key: proba-sufiks
+    unprotect: true
+    paths:
+      - katalog/
+  script:
+    - mkdir -p katalog
+    - echo "test" > katalog/plik.txt

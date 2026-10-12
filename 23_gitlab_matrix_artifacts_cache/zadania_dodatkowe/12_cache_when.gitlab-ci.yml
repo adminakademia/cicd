@@ -1,0 +1,46 @@
+stages:
+  - test
+  - deploy
+
+bez_when:
+  image: alpine
+  stage: test
+  allow_failure: true
+  cache:
+    key: proba-bez-when
+    paths:
+      - katalog_a/
+  script:
+    - mkdir -p katalog_a
+    - echo "Plik z zadania bez_when" > katalog_a/plik.txt
+    - exit 1
+
+z_when_always:
+  image: alpine
+  stage: test
+  allow_failure: true
+  cache:
+    key: proba-when-always
+    paths:
+      - katalog_b/
+    when: always
+  script:
+    - mkdir -p katalog_b
+    - echo "Plik z zadania z_when_always" > katalog_b/plik.txt
+    - exit 1
+
+sprawdz:
+  image: alpine
+  stage: deploy
+  cache:
+    - key: proba-bez-when
+      paths:
+        - katalog_a/
+      policy: pull
+    - key: proba-when-always
+      paths:
+        - katalog_b/
+      policy: pull
+  script:
+    - ls katalog_a/ || echo "Brak katalogu katalog_a"
+    - ls katalog_b/ || echo "Brak katalogu katalog_b"

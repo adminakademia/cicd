@@ -33,7 +33,7 @@ zadanie1bis:
 zadanie2:
   image: alpine
   stage: zadanie2
-  dependencies: 
+  dependencies:
     - zadanie1
   script:
     - ls mojezadania/
@@ -45,7 +45,7 @@ zadanie2:
 zadanie2bis:
   image: alpine
   stage: zadanie2
-  dependencies: 
+  dependencies:
     - zadanie1bis
   script:
     - ls mojezadania/

@@ -1,0 +1,31 @@
+stages:
+  - test
+  - deploy
+
+.cache_nftables:
+  cache:
+    key: "nftables-cache-$CI_PIPELINE_ID"
+    paths:
+      - nftables/
+
+zadanie2bis:
+  extends: .cache_nftables
+  image: alpine
+  stage: test
+  script:
+    - mkdir nftables
+    - cd nftables/
+    - wget https://www.netfilter.org/projects/nftables/files/nftables-1.0.6.1.tar.xz
+  cache:
+    policy: push
+
+zadanie3bis:
+  extends: .cache_nftables
+  image: alpine
+  stage: deploy
+  needs:
+    - job: zadanie2bis
+  script:
+    - ls nftables/
+  cache:
+    policy: pull
