@@ -4,8 +4,8 @@ spec:
       description: "Podaj adres IP hosta na który zrealizować wdrożenie strony www"
       default: "0.0.0.0"
     SSH_USER:
-      description: "Użytkownik SSH do połączenia z hostem (domyślnie: user)"
-      default: "user"
+      description: "Użytkownik SSH do połączenia z hostem (domyślnie: kursant)"
+      default: "kursant"
 
 ---
 
@@ -16,10 +16,10 @@ stages:
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
-# Powyższe oznacza, że przepływ uruchomi się tylko gdy zostanie wywołany 
-# ręcznie z interfejsu webowego GitLaba (przycisk "Run pipeline" w CI/CD → Pipelines)
+# Powyższe oznacza, że przepływ uruchomi się tylko gdy zostanie wywołany
+# ręcznie z interfejsu webowego GitLaba (przycisk "New pipeline" w Build → Pipelines)
     - when: never
-# Powyższe oznacza, że we wszystkich innych przypadkach 
+# Powyższe oznacza, że we wszystkich innych przypadkach
 # (push, merge request, schedule, API, itp.) przepływ nie zostanie uruchomiony.
 
 
@@ -57,7 +57,7 @@ deploy:
 #    - lint
 
   # Poniżej zabezpieczenie przed wiszącym wdrożeniem (np. zawieszony SSH).
-  # Po 30 minutach zadanie padnie – lepsze to niż nieskończone „running".
+  # Po 30 minutach zadanie padnie – lepsze to niż nieskończone „running”.
   timeout: 30 minutes
   # Zapobiega kilku równoległym wdrożeniom na ten sam adres IP:
   resource_group: deploy-www-$[[ inputs.IP_HOSTA ]]
@@ -120,7 +120,7 @@ deploy:
                     ansible_host: ${IP_HOSTA}
                     ansible_connection: ssh
                     ansible_ssh_user: ${SSH_USER}
-                    ansible_python_interpreter: /usr/bin/python3.13
+                    ansible_python_interpreter: /usr/bin/python3
       EOF
     - echo "Plik inventory/serwery.yaml:"
     - cat ./inventory/serwery.yaml

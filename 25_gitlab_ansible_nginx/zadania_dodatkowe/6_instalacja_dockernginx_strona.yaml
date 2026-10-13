@@ -1,0 +1,100 @@
+---
+- name: Instalacja Docker, i strony na Nginx
+  hosts: docker.adminakademia.lan
+  become: true
+
+  vars:
+    dependency_packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    docker_packages:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    keyring_path: /etc/apt/keyrings/docker.asc
+
+  tasks:
+    - name: DOCKER - Sprawdź, czy docker jest zainstalowany.
+      ansible.builtin.command: docker
+      register: result
+      changed_when: false
+      ignore_errors: true
+
+    - name: UBUNTU and DEBIAN DOCKER - Zainstaluj zależności pakietów dla dystrybucji Debian (jeżeli wcześniej się okazało, że Docker nie jest zainstalowany)
+      ansible.builtin.apt:
+        name: "{{ dependency_packages }}"
+        state: present
+        update_cache: true
+      when: (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu') and (result.rc != 0)
+
+    - name: Dodaj klucz GPG Docker (Debian/Ubuntu)
+      ansible.builtin.get_url:
+        url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+      when: (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu') and (result.rc != 0)
+
+    - name: Dodaj repozytorium Docker (Debian/Ubuntu)
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch=amd64 signed-by={{ keyring_path }}] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_lsb.codename }} stable
+        state: present
+        filename: docker
+      when: (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu') and (result.rc != 0)
+
+    - name: Instalacja Dockera i Docker Compose plugin
+      ansible.builtin.apt:
+        name: "{{ docker_packages }}"
+        state: present
+        update_cache: true
+      when: (ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu') and (result.rc != 0)
+
+    - name: (Opcjonalnie) Tworzenie dowiązania symbolicznego dla kompatybilności 'docker-compose'
+      ansible.builtin.file:
+        src: /usr/libexec/docker/cli-plugins/docker-compose
+        dest: /usr/local/bin/docker-compose
+        state: link
+      when: ansible_distribution in ["Ubuntu", "Debian"]
+
+    - name: Sprawdzenie wersji Docker Compose
+      ansible.builtin.command: docker --version
+      register: docker_ver
+      changed_when: false
+
+    - name: Sprawdzenie wersji Docker Compose
+      ansible.builtin.command: docker compose version
+      register: compose_ver
+      changed_when: false
+
+    - name: Wyświetl wersję Docker
+      ansible.builtin.debug:
+        msg: "Docker version: {{ docker_ver.stdout }}"
+
+    - name: Wyswietl wersję Docker Compose
+      ansible.builtin.debug:
+        msg: "Docker Compose version: {{ compose_ver.stdout }}"
+
+    - name: Instalacja kontenera NGINX
+      community.docker.docker_container:
+        name: www-example
+        image: nginx
+        state: started
+        recreate: false
+        restart_policy: unless-stopped
+        ports:
+          - '80:80'
+        volumes:
+          - "/home/kursant/www-example:/usr/share/nginx/html"
+
+    - name: Kopiowanie katalogu z witryną www
+      ansible.builtin.copy:
+        src: strona/
+        dest: /home/kursant/www-example/
+        force: true
+        mode: "0644"
+        directory_mode: "0755"
